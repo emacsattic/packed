@@ -114,6 +114,24 @@ Also see `packed-library-p' which is more restrictive."
                 (file-name-nondirectory
                  (directory-file-name directory))))
 
+(defmacro packed-with-file (file &rest body)
+  "Execute BODY in a buffer containing the contents of FILE.
+If FILE is nil or equal to `buffer-file-name' execute BODY in the
+current buffer.  Move to beginning of buffer before executing BODY."
+  (declare (indent 1) (debug t))
+  (let ((filesym (gensym "file")))
+    `(let ((,filesym ,file))
+       (save-match-data
+	 (save-excursion
+	   (if (and ,filesym (not (equal ,filesym buffer-file-name)))
+	       (with-temp-buffer
+		 (insert-file-contents ,filesym)
+		 (with-syntax-table emacs-lisp-mode-syntax-table
+		   ,@body))
+	     (goto-char (point-min))
+	     (with-syntax-table emacs-lisp-mode-syntax-table
+	       ,@body)))))))
+
 
 ;;; Libraries.
 

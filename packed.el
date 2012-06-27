@@ -349,6 +349,34 @@ files should be ignored."
             (add-to-list 'features (intern feature))))))
     features))
 
+(defun packed-library-feature (file)
+  "Return the first valid feature actually provided by FILE.
+
+Here valid means that requiring that feature would actually load FILE.
+Normally that is the case when the feature matches the filename, e.g.
+when \"foo.el\" provides `foo'.  But if \"foo.el\"s parent directory's
+filename is \"bar\" then `bar/foo' would also be valid.  Of course this
+depends on the actual value of `load-path', here we just assume that it
+allows for file to be found.
+
+This can be used to determine if an Emacs lisp file should be considered
+a library.  Not every Emacs lisp file has to provide a feature / be a
+library.  If a file lacks an expected feature then loading it using
+`require' still succeeds but causes an error."
+  (let ((features (packed-with-file file (packed-provided)))
+        feature)
+    (setq file (file-name-sans-extension
+                (file-name-sans-extension file)))
+    (while features
+      (setq feature (pop features))
+      (if (or (eq feature (intern (file-name-nondirectory file)))
+              (string-match (concat (convert-standard-filename
+                                     (symbol-name feature)) "$")
+                            file))
+          (setq features nil)
+        (setq feature nil)))
+    feature))
+
 (defconst packed-required-regexp "\
 \(\\(?:cc-\\)?require[\s\t\n]+'\
 \\([^(),\s\t\n]+\\)\

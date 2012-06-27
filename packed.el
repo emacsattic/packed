@@ -177,10 +177,17 @@ files should be ignored."
 
 (defun packed-libraries-git-1 (revision &optional raw)
   (require 'magit)
-  (mapcan (lambda (f)
-            (when (packed-library-p f raw)
-              (list f)))
-          (magit-git-lines "ls-tree" "-r" "--name-only" revision)))
+  (mapcan
+   (lambda (f)
+     (when (with-temp-buffer
+             (magit-git-insert (list "show" (concat revision ":" f)))
+             (goto-char (point-min))
+             (setq buffer-file-name f)
+             (set-buffer-modified-p nil)
+             (with-syntax-table emacs-lisp-mode-syntax-table
+               (packed-library-p f raw)))
+       (list f)))
+   (magit-git-lines "ls-tree" "-r" "--name-only" revision)))
 
 (defun packed-mainfile (directory &optional name noerror)
   (packed-mainfile-1 (or name (file-name-nondirectory

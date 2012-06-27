@@ -80,14 +80,6 @@ This uses the variables `load-suffixes' and `load-file-rep-suffixes'."
   "Return the valid suffixes of Emacs libraries as a regular expression."
   (concat (regexp-opt (packed-el-suffixes nil t)) "\\'"))
 
-(defun packed-source-file-p (file)
-  "Return non-nil if FILE is an Emacs source file.
-More precisely return non-nil if FILE has an appropriate suffix.
-Also see `packed-library-p' which is more restrictive."
-  (and (save-match-data (string-match (packed-el-regexp) file))
-       (not (backup-file-name-p file))
-       (not (auto-save-file-name-p file))))
-
 (defun packed-source-file (elc)
   "Return the Emacs source file for byte-compile destination ELC."
   (let ((standard (concat (file-name-sans-extension
@@ -99,20 +91,21 @@ Also see `packed-library-p' which is more restrictive."
         (setq file nil)))
     (or file standard)))
 
-(defvar packed-ignore-file-regexp
-  "\\(^\\.\\|-pkg\\.el\\)")
+(defvar packed-ignore-library-regexp
+  "\\(^\\.\\|-pkg\\.el$\\)")
 
-(defun packed-ignore-file-p (file)
-  (string-match packed-ignore-file-regexp
-                (file-name-nondirectory file)))
+(defun packed-ignore-library-p (library)
+  (and packed-ignore-library-regexp
+       (string-match packed-ignore-library-regexp library)))
 
 (defvar packed-ignore-directory-regexp
   "\\(^\\.\\|^t\\(est\\(ing\\)?\\)?$\\)")
 
 (defun packed-ignore-directory-p (directory)
-  (string-match packed-ignore-directory-regexp
-                (file-name-nondirectory
-                 (directory-file-name directory))))
+  (and packed-ignore-directory-regexp
+       (string-match packed-ignore-directory-regexp
+                     (file-name-nondirectory
+                      (directory-file-name directory)))))
 
 (defmacro packed-with-file (file &rest body)
   "Execute BODY in a buffer containing the contents of FILE.
@@ -135,11 +128,16 @@ current buffer.  Move to beginning of buffer before executing BODY."
 
 ;;; Libraries.
 
-;; FIXME return nil for hidden and backup files, and similar
 (defun packed-library-p (file &optional raw)
   "Return non-nil if FILE is an Emacs source library."
-  (and (packed-source-file-p file)
-       (or raw (not (packed-ignore-file-p file)))))
+  (save-match-data
+    (and (string-match (packed-el-regexp) file)
+         (not (auto-save-file-name-p file))
+         (or raw
+             (let ((name (file-name-nondirectory file)))
+               (and (not (string-equal dir-locals-file name))
+                    (not (packed-ignore-library-p name))
+                    (packed-library-feature file)))))))
 
 (defun packed-locate-library (library &optional nosuffix path interactive-call)
   "Show the precise file name of Emacs library LIBRARY.

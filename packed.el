@@ -116,7 +116,9 @@ Other reasons exist why a directory could be ignored."
 (defmacro packed-with-file (file &rest body)
   "Execute BODY in a buffer containing the contents of FILE.
 If FILE is nil or equal to `buffer-file-name' execute BODY in the
-current buffer.  Move to beginning of buffer before executing BODY."
+current buffer.  Move to beginning of buffer before executing BODY.
+
+FILE should be an Emacs lisp source file."
   (declare (indent 1) (debug t))
   (let ((filesym (gensym "file")))
     `(let ((,filesym ,file))

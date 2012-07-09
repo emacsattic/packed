@@ -206,10 +206,10 @@ files should be ignored."
        (list f)))
    (magit-git-lines "ls-tree" "-r" "--name-only" revision)))
 
-(defun packed-mainfile (directory &optional name noerror)
-  (packed-mainfile-1 (or name (file-name-nondirectory
-                               (directory-file-name directory)))
-                     (packed-libraries directory)
+(defun packed-mainfile (directory &optional package noerror)
+  (packed-mainfile-1 (or package (file-name-nondirectory
+                                  (directory-file-name directory)))
+                     (packed-libraries directory package)
                      noerror))
 
 (defun packed-mainfile-1 (package libraries &optional noerror)

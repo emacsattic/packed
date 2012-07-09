@@ -90,11 +90,7 @@ This uses the variables `load-suffixes' and `load-file-rep-suffixes'."
     (or file standard)))
 
 (defvar packed-ignore-library-regexp
-  "\\(^\\.\\|-pkg\\.el$\\)")
-
-(defun packed-ignore-library-p (library)
-  (and packed-ignore-library-regexp
-       (string-match packed-ignore-library-regexp library)))
+  (regexp-opt (list "^t$" "test" "tests" "testing")))
 
 (defvar packed-ignore-directory-regexp
   (regexp-opt (list "^t$" "test" "tests" "testing")))
@@ -136,16 +132,28 @@ FILE should be an Emacs lisp source file."
 
 ;;; Libraries.
 
-(defun packed-library-p (file &optional raw)
+(defun packed-library-p (file &optional package raw)
   "Return non-nil if FILE is an Emacs source library."
   (save-match-data
     (and (string-match (packed-el-regexp) file)
          (not (auto-save-file-name-p file))
          (or raw
              (let ((name (file-name-nondirectory file)))
-               (and (not (string-equal dir-locals-file name))
-                    (not (packed-ignore-library-p name))
-                    (packed-library-feature file)))))))
+               (and (not (string-match "^\\." name))
+                    (not (string-equal name dir-locals-file))
+                    (not (if package
+                             (string-equal name (concat package "-pkg.el"))
+                           (string-match "-pkg\\.el$" name)))
+                    (not (and packed-ignore-library-regexp
+                              (string-match packed-ignore-library-regexp
+                                            (file-name-nondirectory file))
+                              (or (not package)
+                                  (not (string-match
+                                        packed-ignore-library-regexp
+                                        package)))))
+                    (or (packed-library-feature file)
+                        ;; $$$ is it okay for themes not to provide a feature?
+                        (string-match "-theme\\.el$" file))))))))
 
 (defun packed-locate-library (library &optional nosuffix path interactive-call)
   "Show the precise file name of Emacs library LIBRARY.

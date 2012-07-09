@@ -52,12 +52,10 @@
   :group 'convenience
   :prefix 'packed)
 
-(defcustom packed-loaddefs-filename
-  '("loaddefs.el" ".loaddefs.el")
-  "Name of the files used to store extracted autoload definitions.
-Can also be a list of such names."
+(defcustom packed-loaddefs-filename "loaddefs.el"
+  "Name of the files used to store extracted autoload definitions."
   :group 'packed
-  :type '(choice file (repeat file)))
+  :type 'file)
 
 
 ;;; Files.
@@ -264,18 +262,9 @@ files should be ignored."
 
 ;;; Autoloads.
 
-;; FIXME the order in which files are tried can lead to surprising results;
-;; either document implement something like locate-dominating-file*s"
 (defun packed-loaddefs-file (&optional directory)
-  (let ((candidates (if (listp packed-loaddefs-filename)
-                        packed-loaddefs-filename
-                      (list packed-loaddefs-filename)))
-        found)
-    (while (and (not found) candidates)
-      (setq found (locate-dominating-file
-                   (or directory default-directory)
-                   (pop candidates))))
-    found))
+  (locate-dominating-file (or directory default-directory)
+                          packed-loaddefs-filename))
 
 (defun packed-load-autoloads (&optional directory)
   (let ((file (packed-loaddefs-file directory)))

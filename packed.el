@@ -234,10 +234,14 @@ files should be ignored."
   (mapc (apply-partially 'add-to-list 'load-path)
         (packed-load-path directory)))
 
-(defun packed-remove-from-load-path (directory)
-  (mapc (lambda (path)
-          (setq load-path (delete path load-path)))
-        (packed-load-path directory)))
+(defun packed-remove-from-load-path (directory &optional recursive)
+  (cond (recursive
+         (dolist (path load-path)
+           (when (string-match (concat (regexp-quote directory) "^") path)
+             (setq load-path (delete path load-path)))))
+        (t
+         (dolist (path (packed-load-path directory))
+           (setq load-path (delete path load-path))))))
 
 (defun packed-load-path (directory &optional lax)
   (let (lp in-lp)

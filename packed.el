@@ -179,17 +179,20 @@ and the file name is displayed in the echo area."
           (message "No library %s in search path" library)))
     file))
 
-;; FIXME this still returns to much and generally has to be much smarter
-(defun packed-libraries (directory &optional raw)
+(defun packed-libraries (directory &optional package raw)
   "Return a list of libraries in the package directory DIRECTORY.
 DIRECTORY is assumed to contain the libraries belonging to a single
 package.  Some assumptions are made about what directories and what
 files should be ignored."
-  (let (libraries)
+  (let ((default-directory directory)
+        libraries)
     (dolist (f (directory-files directory nil "^[^.]"))
       (cond ((file-directory-p f)
-             (setq libraries (nconc (packed-libraries f raw))))
-            ((packed-library-p f)
+             (or (file-exists-p (expand-file-name ".nosearch" f))
+                 (packed-ignore-directory-p f package)
+                 (setq libraries (nconc (packed-libraries f package raw)))))
+            ((packed-library-p
+              f (or package (packed-directory-package directory)) raw)
              (push f libraries))))
     (sort libraries 'string<)))
 
@@ -235,12 +238,15 @@ files should be ignored."
   (car (member* (concat "^" (regexp-quote name) (packed-el-regexp) "$")
                 libraries :test 'string-match :key 'file-name-nondirectory)))
 
+(defun packed-directory-package (directory)
+  (file-name-nondirectory (directory-file-name directory)))
+
 
 ;;; Load Path.
 
-(defun packed-add-to-load-path (directory)
+(defun packed-add-to-load-path (directory &optional package)
   (mapc (apply-partially 'add-to-list 'load-path)
-        (packed-load-path directory)))
+        (packed-load-path directory package)))
 
 (defun packed-remove-from-load-path (directory &optional recursive)
   (cond (recursive
@@ -251,16 +257,18 @@ files should be ignored."
          (dolist (path (packed-load-path directory))
            (setq load-path (delete path load-path))))))
 
-(defun packed-load-path (directory &optional lax)
+(defun packed-load-path (directory &optional package raw)
   (let (lp in-lp)
     (dolist (f (directory-files directory t "^[^.]"))
       (cond ((file-regular-p f)
              (and (not in-lp)
-                  (packed-library-p f lax)
+                  (packed-library-p
+                   f (or package (packed-directory-package directory)) raw)
                   (add-to-list 'lp (directory-file-name directory))
                   (setq in-lp t)))
             ((file-directory-p f)
-             (and (not (packed-ignore-directory-p directory))
+             (and (not (packed-ignore-directory-p directory package))
+                  (not (file-exists-p (expand-file-name ".nosearch" f)))
                   (setq lp (nconc (packed-load-path f package raw) lp))))))
     lp))
 

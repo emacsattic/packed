@@ -97,16 +97,21 @@ This uses the variables `load-suffixes' and `load-file-rep-suffixes'."
        (string-match packed-ignore-library-regexp library)))
 
 (defvar packed-ignore-directory-regexp
-  (regexp-opt (list "t" "test" "tests" "testing")))
+  (regexp-opt (list "^t$" "test" "tests" "testing")))
 
-(defun packed-ignore-directory-p (directory)
+(defun packed-ignore-directory-p (directory &optional package)
   "Whether DIRECTORY should be ignored based on it's filename.
-Return t if DIRECTORY's filename matches `packed-ignore-directory-regexp.
+Return t if DIRECTORY's filename matches `packed-ignore-directory-regexp'.
+If optional PACKAGE also matches that regular expression also then don't
+ignore the directory.
+
 Other reasons exist why a directory could be ignored."
   (and packed-ignore-directory-regexp
        (string-match packed-ignore-directory-regexp
                      (file-name-nondirectory
-                      (directory-file-name directory)))))
+                      (directory-file-name directory)))
+       (or (not package)
+           (not (string-match packed-ignore-directory-regexp package)))))
 
 (defmacro packed-with-file (file &rest body)
   "Execute BODY in a buffer containing the contents of FILE.

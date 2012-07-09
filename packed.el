@@ -245,17 +245,15 @@ files should be ignored."
 
 (defun packed-load-path (directory &optional lax)
   (let (lp in-lp)
-    (dolist (f (directory-files directory t))
-      (cond ((member (file-name-nondirectory f) '("." "..")))
-            ((file-regular-p f)
+    (dolist (f (directory-files directory t "^[^.]"))
+      (cond ((file-regular-p f)
              (and (not in-lp)
                   (packed-library-p f lax)
                   (add-to-list 'lp (directory-file-name directory))
                   (setq in-lp t)))
             ((file-directory-p f)
              (and (not (packed-ignore-directory-p directory))
-                  (setq lp (nconc (packed-load-path f) lp))))
-            (t))) ; TODO don't just implicilty ignore strange files
+                  (setq lp (nconc (packed-load-path f package raw) lp))))))
     lp))
 
 

@@ -97,9 +97,12 @@ This uses the variables `load-suffixes' and `load-file-rep-suffixes'."
        (string-match packed-ignore-library-regexp library)))
 
 (defvar packed-ignore-directory-regexp
-  "\\(^\\.\\|^t\\(est\\(ing\\)?\\)?$\\)")
+  (regexp-opt (list "t" "test" "tests" "testing")))
 
 (defun packed-ignore-directory-p (directory)
+  "Whether DIRECTORY should be ignored based on it's filename.
+Return t if DIRECTORY's filename matches `packed-ignore-directory-regexp.
+Other reasons exist why a directory could be ignored."
   (and packed-ignore-directory-regexp
        (string-match packed-ignore-directory-regexp
                      (file-name-nondirectory

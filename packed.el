@@ -206,23 +206,47 @@ files should be ignored."
              (push f libraries))))
     (sort libraries 'string<)))
 
-(defun packed-libraries-git (repository revision &optional raw)
-  (let ((default-directory repository))
-    (packed-libraries-git-1 revision raw)))
-
-(defun packed-libraries-git-1 (revision &optional raw)
+(defun packed-git-library-p (commit file &optional package raw)
   (require 'magit)
-  (mapcan
-   (lambda (f)
-     (when (with-temp-buffer
-             (magit-git-insert (list "show" (concat revision ":" f)))
-             (goto-char (point-min))
-             (setq buffer-file-name f)
-             (set-buffer-modified-p nil)
-             (with-syntax-table emacs-lisp-mode-syntax-table
-               (packed-library-p f raw)))
-       (list f)))
-   (magit-git-lines "ls-tree" "-r" "--name-only" revision)))
+  (with-temp-buffer
+    (magit-git-insert (list "show" (concat commit ":" file)))
+    (goto-char (point-min))
+    (setq buffer-file-name file)
+    (set-buffer-modified-p nil)
+    (with-syntax-table emacs-lisp-mode-syntax-table
+      (packed-library-p file package raw))))
+
+(defun packed-git-libraries (repository commit &optional package raw)
+  (let ((default-directory repository))
+    (packed-git-libraries-1
+     commit nil (or package (packed-directory-package repository)) raw)))
+
+(defun packed-git-libraries-1 (commit directory package &optional raw)
+  (require 'magit)
+  (let ((objects
+         (mapcar
+          (lambda (line)
+            (string-match
+             (concat "^[0-9]\\{6\\} \\([^ ]+\\) "
+                     "[a-z0-9]\\{40\\}\t\\(.+\\)$") line)
+            (list (match-string 2 line)
+                  (intern (match-string 1 line))))
+          (magit-git-lines "ls-tree" "--full-tree"
+                           (concat commit ":" directory)))))
+    (unless (assoc ".nosearch" objects)
+      (mapcan
+       (lambda (object)
+           (destructuring-bind (file type) object
+           (setq file (concat (and directory (file-name-as-directory directory))
+                              file))
+           (ecase type
+             (blob (when (packed-git-library-p commit file package raw)
+                     (list file)))
+             (tree (unless (packed-ignore-directory-p file package)
+                     (packed-git-libraries-1 commit file package raw)))
+             (commit)
+             )))
+       objects))))
 
 (defun packed-mainfile (directory &optional package noerror)
   (packed-mainfile-1 (or package (file-name-nondirectory

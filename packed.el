@@ -209,19 +209,19 @@ files should be ignored."
                      (packed-libraries directory)
                      noerror))
 
-(defun packed-mainfile-1 (name libraries &optional noerror)
+(defun packed-mainfile-1 (package libraries &optional noerror)
   (cond ((not (cdr libraries))
          (car libraries))
-        ((packed-mainfile-2 name libraries))
+        ((packed-mainfile-2 package libraries))
         ((packed-mainfile-2
-          (if (string-match "-mode$" name)
-              (substring name 0 -5)
-            (concat name "-mode"))
+          (if (string-match "-mode$" package)
+              (substring package 0 -5)
+            (concat package "-mode"))
           libraries))
         (noerror
          nil)
         (t
-         (error "Cannot determine mainfile of %s" name))))
+         (error "Cannot determine mainfile of %s" package))))
 
 (defun packed-mainfile-2 (name libraries)
   (car (member* (concat "^" (regexp-quote name) (packed-el-regexp) "$")

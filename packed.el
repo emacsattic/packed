@@ -58,7 +58,7 @@
   :type 'file)
 
 
-;;; Files.
+;;; Libraries.
 
 (defun packed-el-suffixes (&optional nosuffix must-suffix)
   "Return a list of the valid suffixes of Emacs libraries.
@@ -88,6 +88,40 @@ This uses the variables `load-suffixes' and `load-file-rep-suffixes'."
       (unless (file-exists-p (setq file (concat standard (pop suffixes))))
         (setq file nil)))
     (or file standard)))
+
+(defun packed-locate-library (library &optional nosuffix path interactive-call)
+  "Show the precise file name of Emacs library LIBRARY.
+Unlike `locate-library' don't return the byte-compile destination
+if it exists but always the Emacs source file.
+
+LIBRARY should be a relative file name of the library, a string.
+It can omit the suffix (a.k.a. file-name extension) if NOSUFFIX is
+nil (which is the default, see below).
+This command searches the directories in `load-path' like `\\[load-library]'
+to find the file that `\\[load-library] RET LIBRARY RET' would load.
+Optional second arg NOSUFFIX non-nil means don't add suffixes `load-suffixes'
+to the specified name LIBRARY.
+
+If the optional third arg PATH is specified, that list of directories
+is used instead of `load-path'.
+
+When called from a program, the file name is normally returned as a
+string.  When run interactively, the argument INTERACTIVE-CALL is t,
+and the file name is displayed in the echo area."
+  (interactive (list (completing-read "Locate library: "
+                                      (apply-partially
+                                       'locate-file-completion-table
+                                       load-path (get-load-suffixes)))
+                     nil nil
+                     t))
+  (let ((file (locate-file (substitute-in-file-name library)
+                           (or path load-path)
+                           (packed-el-suffixes nosuffix))))
+    (if interactive-call
+        (if file
+            (message "Library is file %s" (abbreviate-file-name file))
+          (message "No library %s in search path" library)))
+    file))
 
 (defvar packed-ignore-library-regexp
   (regexp-opt (list "^t$" "test" "tests" "testing")))
@@ -129,9 +163,6 @@ FILE should be an Emacs lisp source file."
 	     (with-syntax-table emacs-lisp-mode-syntax-table
 	       ,@body)))))))
 
-
-;;; Libraries.
-
 (defun packed-library-p (file &optional package raw)
   "Return non-nil if FILE is an Emacs source library."
   (save-match-data
@@ -154,40 +185,6 @@ FILE should be an Emacs lisp source file."
                     (or (packed-library-feature file)
                         ;; $$$ is it okay for themes not to provide a feature?
                         (string-match "-theme\\.el$" file))))))))
-
-(defun packed-locate-library (library &optional nosuffix path interactive-call)
-  "Show the precise file name of Emacs library LIBRARY.
-Unlike `locate-library' don't return the byte-compile destination
-if it exists but always the Emacs source file.
-
-LIBRARY should be a relative file name of the library, a string.
-It can omit the suffix (a.k.a. file-name extension) if NOSUFFIX is
-nil (which is the default, see below).
-This command searches the directories in `load-path' like `\\[load-library]'
-to find the file that `\\[load-library] RET LIBRARY RET' would load.
-Optional second arg NOSUFFIX non-nil means don't add suffixes `load-suffixes'
-to the specified name LIBRARY.
-
-If the optional third arg PATH is specified, that list of directories
-is used instead of `load-path'.
-
-When called from a program, the file name is normally returned as a
-string.  When run interactively, the argument INTERACTIVE-CALL is t,
-and the file name is displayed in the echo area."
-  (interactive (list (completing-read "Locate library: "
-                                      (apply-partially
-                                       'locate-file-completion-table
-                                       load-path (get-load-suffixes)))
-                     nil nil
-                     t))
-  (let ((file (locate-file (substitute-in-file-name library)
-                           (or path load-path)
-                           (packed-el-suffixes nosuffix))))
-    (if interactive-call
-        (if file
-            (message "Library is file %s" (abbreviate-file-name file))
-          (message "No library %s in search path" library)))
-    file))
 
 (defun packed-libraries (directory &optional package raw)
   "Return a list of libraries in the package directory DIRECTORY.

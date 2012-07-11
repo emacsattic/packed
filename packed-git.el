@@ -47,32 +47,33 @@
 (defun packed-git-libraries (repository commit &optional package raw)
   (let ((default-directory repository))
     (packed-git-libraries-1
-     commit nil (or package (packed-directory-package repository)) raw)))
+     commit nil (or package (packed-directory-package repository)) raw t)))
 
-(defun packed-git-libraries-1 (commit directory package &optional raw)
-  (let ((objects
-         (mapcar
-          (lambda (line)
-            (string-match
-             (concat "^[0-9]\\{6\\} \\([^ ]+\\) "
-                     "[a-z0-9]\\{40\\}\t\\(.+\\)$") line)
-            (list (match-string 2 line)
-                  (intern (match-string 1 line))))
-          (magit-git-lines "ls-tree" "--full-tree"
-                           (concat commit ":" directory)))))
-    (unless (assoc ".nosearch" objects)
+(defun packed-git-libraries-1 (commit directory package
+                                      &optional raw top-level)
+  (let* ((objects
+          (mapcar (lambda (line)
+                    (string-match
+                     (concat "^[0-9]\\{6\\} \\([^ ]+\\) "
+                             "[a-z0-9]\\{40\\}\t\\(.+\\)$") line)
+                    (list (match-string 2 line)
+                          (intern (match-string 1 line))))
+                  (magit-git-lines "ls-tree" "--full-tree"
+                                   (concat commit ":" directory))))
+         (searchp (not (assoc ".nosearch" objects))))
+    (when (or top-level searchp)
       (mapcan
        (lambda (object)
-           (destructuring-bind (file type) object
+         (destructuring-bind (file type) object
            (setq file (concat (and directory (file-name-as-directory directory))
                               file))
            (ecase type
-             (blob (when (packed-git-library-p commit file package raw)
-                     (list file)))
+             (blob (and searchp
+                        (packed-git-library-p commit file package raw)
+                        (list file)))
              (tree (unless (packed-ignore-directory-p file package)
                      (packed-git-libraries-1 commit file package raw)))
-             (commit)
-             )))
+             (commit))))
        objects))))
 
 (provide 'packed-git)

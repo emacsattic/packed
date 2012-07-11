@@ -165,11 +165,11 @@ FILE should be an Emacs lisp source file."
 
 (defun packed-library-p (file &optional package raw)
   "Return non-nil if FILE is an Emacs source library."
-  (save-match-data
-    (and (string-match (packed-el-regexp) file)
-         (not (auto-save-file-name-p file))
-         (or raw
-             (let ((name (file-name-nondirectory file)))
+  (let ((name (file-name-nondirectory file)))
+    (save-match-data
+      (and (string-match (packed-el-regexp) name)
+           (not (auto-save-file-name-p name))
+           (or raw
                (and (not (string-match "^\\." name))
                     (not (string-equal name dir-locals-file))
                     (not (if package
@@ -191,17 +191,25 @@ FILE should be an Emacs lisp source file."
 DIRECTORY is assumed to contain the libraries belonging to a single
 package.  Some assumptions are made about what directories and what
 files should be ignored."
-  (let ((default-directory directory)
-        libraries)
-    (dolist (f (directory-files directory nil "^[^.]"))
+  (sort (mapcar (lambda (file)
+                  (file-relative-name file directory))
+                (packed-libraries-1
+                 directory
+                 (or package (packed-directory-package directory))
+                 raw))
+        'string<))
+
+(defun packed-libraries-1 (directory &optional package raw)
+  (let (libraries)
+    (dolist (f (directory-files directory t "^[^.]"))
       (cond ((file-directory-p f)
              (or (file-exists-p (expand-file-name ".nosearch" f))
                  (packed-ignore-directory-p f package)
-                 (setq libraries (nconc (packed-libraries f package raw)))))
-            ((packed-library-p
-              f (or package (packed-directory-package directory)) raw)
+                 (setq libraries (nconc (packed-libraries-1 f package raw)
+                                        libraries))))
+            ((packed-library-p f package raw)
              (push f libraries))))
-    (sort libraries 'string<)))
+    libraries))
 
 (defun packed-mainfile (directory &optional package noerror)
   (packed-mainfile-1 (or package (file-name-nondirectory

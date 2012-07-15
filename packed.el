@@ -34,6 +34,7 @@
 ;; Emacs Lisp libraries that are stored in a dedicated directory such as
 ;; a vcs repository.
 
+;;; TODO:
 ;; TODO generally Packed still has to become much smarter
 ;; TODO assert that auto-save and backup files are always ignored
 ;; TODO handle disappearing files gracefully
@@ -61,9 +62,9 @@
 ;;; Libraries.
 
 (defun packed-el-suffixes (&optional nosuffix must-suffix)
-  "Return a list of the valid suffixes of Emacs libraries.
+  "Return a list of the valid suffixes of Emacs Lisp source libraries.
 Unlike `get-load-suffixes' don't return the suffixes for byte-compile
-destinations just those of Emacs source files.
+destinations just those of source files.
 
 If NOSUFFIX is non-nil the `.el' part is omitted.
 IF MUST-SUFFIX is non-nil all returned suffixes contain `.el'.

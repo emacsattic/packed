@@ -350,7 +350,14 @@ files should be ignored."
                                  (when (match-string 2)
                                    (split-string (match-string 2) " " t))))
             (add-to-list 'features (intern feature))))))
-    features))
+    (or features
+        (and (goto-char (point-min))
+             (re-search-forward
+              "^(provide-me\\(?:[\s\t\n]\"\\(.+\\)\"\\)?)" nil t)
+             (list (intern (concat (match-string 1)
+                                   (file-name-sans-extension
+                                    (file-name-nondirectory
+                                     buffer-file-name)))))))))
 
 ;; It is wrong for a library foo.el to provide foo-mode but there are many
 ;; packages that do just that and I don't want to deal with it right now.

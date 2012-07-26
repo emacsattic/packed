@@ -186,6 +186,8 @@ FILE should be an Emacs lisp source file."
            (or (packed-library-feature file)
                ;; $$$ is it okay for themes not to provide a feature?
                (string-match "-theme\\.el$" file))))))
+
+(defun packed-libraries (directory &optional package all)
   "Return a list of libraries in the package directory DIRECTORY.
 DIRECTORY is assumed to contain the libraries belonging to a single
 package.  Some assumptions are made about what directories and what
@@ -195,18 +197,22 @@ files should be ignored."
                 (packed-libraries-1
                  directory
                  (or package (packed-filename directory))
-                 raw))
+                 all))
         'string<))
 
-(defun packed-libraries-1 (directory &optional package raw)
+(defun packed-libraries-1 (directory &optional package all)
   (let (libraries)
     (dolist (f (directory-files directory t "^[^.]"))
       (cond ((file-directory-p f)
              (or (file-exists-p (expand-file-name ".nosearch" f))
                  (packed-ignore-directory-p f package)
-                 (setq libraries (nconc (packed-libraries-1 f package raw)
+                 (setq libraries (nconc (packed-libraries-1 f package all)
                                         libraries))))
-            ((packed-library-p f package raw)
+            (all
+             (when (string-match (packed-el-regexp)
+                                 (file-name-nondirectory f))
+               (push (cons f (packed-library-p f package)) libraries)))
+            ((packed-library-p f package)
              (push f libraries))))
     libraries))
 

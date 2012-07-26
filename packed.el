@@ -125,10 +125,10 @@ and the file name is displayed in the echo area."
     file))
 
 (defvar packed-ignore-library-regexp
-  (regexp-opt (list "^t$" "test" "tests" "testing")))
+  (regexp-opt (list "^t$" "test")))
 
 (defvar packed-ignore-directory-regexp
-  (regexp-opt (list "^t$" "test" "tests" "testing")))
+  (regexp-opt (list "^t$" "test")))
 
 (defun packed-ignore-directory-p (directory &optional package)
   "Whether DIRECTORY should be ignored based on it's filename.

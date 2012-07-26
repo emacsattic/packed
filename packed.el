@@ -187,34 +187,31 @@ FILE should be an Emacs lisp source file."
                ;; $$$ is it okay for themes not to provide a feature?
                (string-match "-theme\\.el$" file))))))
 
-(defun packed-libraries (directory &optional package all)
+(defun packed-libraries (directory &optional package full all)
   "Return a list of libraries in the package directory DIRECTORY.
 DIRECTORY is assumed to contain the libraries belonging to a single
 package.  Some assumptions are made about what directories and what
 files should be ignored."
-  (sort (mapcar (lambda (file)
-                  (file-relative-name file directory))
-                (packed-libraries-1
-                 directory
-                 (or package (packed-filename directory))
-                 all))
-        'string<))
+  (mapcan (lambda (elt)
+            (when (or all (cdr elt))
+              (list (if full
+                        (car elt)
+                      (file-relative-name (car elt) directory)))))
+          (packed-libraries-1 directory
+                              (or package (packed-filename directory)))))
 
-(defun packed-libraries-1 (directory &optional package all)
+(defun packed-libraries-1 (directory &optional package)
   (let (libraries)
     (dolist (f (directory-files directory t "^[^.]"))
       (cond ((file-directory-p f)
              (or (file-exists-p (expand-file-name ".nosearch" f))
                  (packed-ignore-directory-p f package)
-                 (setq libraries (nconc (packed-libraries-1 f package all)
+                 (setq libraries (nconc (packed-libraries-1 f package)
                                         libraries))))
-            (all
-             (when (string-match (packed-el-regexp)
-                                 (file-name-nondirectory f))
-               (push (cons f (packed-library-p f package)) libraries)))
-            ((packed-library-p f package)
-             (push f libraries))))
-    libraries))
+            ((string-match (packed-el-regexp)
+                           (file-name-nondirectory f))
+             (push (cons f (packed-library-p f package)) libraries))))
+    (nreverse libraries)))
 
 (defun packed-mainfile (directory &optional package noerror)
   (packed-mainfile-1 (or package (packed-filename directory))
@@ -291,7 +288,7 @@ files should be ignored."
           (dir-count 0)
           file dir last-dir)
       (displaying-byte-compile-warnings
-       (dolist (elt (packed-libraries directory package t))
+       (dolist (elt (packed-libraries-1 directory package))
          (setq file (car elt)
                dir (file-name-nondirectory file))
          (if (cdr elt)

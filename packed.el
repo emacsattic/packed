@@ -196,7 +196,7 @@ files should be ignored."
                   (file-relative-name file directory))
                 (packed-libraries-1
                  directory
-                 (or package (packed-directory-package directory))
+                 (or package (packed-filename directory))
                  raw))
         'string<))
 
@@ -213,8 +213,7 @@ files should be ignored."
     libraries))
 
 (defun packed-mainfile (directory &optional package noerror)
-  (packed-mainfile-1 (or package (file-name-nondirectory
-                                  (directory-file-name directory)))
+  (packed-mainfile-1 (or package (packed-filename directory))
                      (packed-libraries directory package)
                      noerror))
 
@@ -236,8 +235,8 @@ files should be ignored."
   (car (member* (concat "^" (regexp-quote name) (packed-el-regexp) "$")
                 libraries :test 'string-match :key 'file-name-nondirectory)))
 
-(defun packed-directory-package (directory)
-  (file-name-nondirectory (directory-file-name directory)))
+(defun packed-filename (file)
+  (file-name-nondirectory (directory-file-name file)))
 
 
 ;;; Load Path.
@@ -261,7 +260,7 @@ files should be ignored."
       (cond ((file-regular-p f)
              (and (not in-lp)
                   (packed-library-p
-                   f (or package (packed-directory-package directory)) raw)
+                   f (or package (packed-filename directory)) raw)
                   (add-to-list 'lp (directory-file-name directory))
                   (setq in-lp t)))
             ((file-directory-p f)

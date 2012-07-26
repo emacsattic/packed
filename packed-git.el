@@ -47,7 +47,7 @@
 (defun packed-git-libraries (repository commit &optional package raw)
   (let ((default-directory repository))
     (packed-git-libraries-1
-     commit nil (or package (packed-directory-package repository)) raw t)))
+     commit nil (or package (packed-filename repository)) raw t)))
 
 (defun packed-git-libraries-1 (commit directory package
                                       &optional raw top-level)

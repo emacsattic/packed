@@ -258,19 +258,19 @@ files should be ignored."
          (dolist (path (packed-load-path directory))
            (setq load-path (delete path load-path))))))
 
-(defun packed-load-path (directory &optional package raw)
+(defun packed-load-path (directory &optional package)
   (let (lp in-lp)
     (dolist (f (directory-files directory t "^[^.]"))
       (cond ((file-regular-p f)
              (and (not in-lp)
                   (packed-library-p
-                   f (or package (packed-filename directory)) raw)
+                   f (or package (packed-filename directory)))
                   (add-to-list 'lp (directory-file-name directory))
                   (setq in-lp t)))
             ((file-directory-p f)
              (and (not (packed-ignore-directory-p directory package))
                   (not (file-exists-p (expand-file-name ".nosearch" f)))
-                  (setq lp (nconc (packed-load-path f package raw) lp))))))
+                  (setq lp (nconc (packed-load-path f package) lp))))))
     lp))
 
 

@@ -164,30 +164,28 @@ FILE should be an Emacs lisp source file."
 	     (with-syntax-table emacs-lisp-mode-syntax-table
 	       ,@body)))))))
 
-(defun packed-library-p (file &optional package raw)
+(defun packed-library-p (file &optional package)
   "Return non-nil if FILE is an Emacs source library."
   (let ((name (file-name-nondirectory file)))
     (save-match-data
       (and (string-match (packed-el-regexp) name)
-           (not (auto-save-file-name-p name))
-           (or raw
-               (and (not (string-match "^\\." name))
-                    (not (string-equal name dir-locals-file))
-                    (not (if package
-                             (string-equal name (concat package "-pkg.el"))
-                           (string-match "-pkg\\.el$" name)))
-                    (not (and packed-ignore-library-regexp
-                              (string-match packed-ignore-library-regexp
-                                            (file-name-nondirectory file))
-                              (or (not package)
-                                  (not (string-match
-                                        packed-ignore-library-regexp
-                                        package)))))
-                    (or (packed-library-feature file)
-                        ;; $$$ is it okay for themes not to provide a feature?
-                        (string-match "-theme\\.el$" file))))))))
-
-(defun packed-libraries (directory &optional package raw)
+           (not (or (file-symlink-p file)
+                    (string-match "^\\." name)
+                    (string-equal name dir-locals-file)
+                    (auto-save-file-name-p name)
+                    (if package
+                        (string-equal name (concat package "-pkg.el"))
+                      (string-match "-pkg\\.el$" name))
+                    (and packed-ignore-library-regexp
+                         (string-match packed-ignore-library-regexp
+                                       (file-name-nondirectory file))
+                         (or (not package)
+                             (not (string-match
+                                   packed-ignore-library-regexp
+                                   package))))))
+           (or (packed-library-feature file)
+               ;; $$$ is it okay for themes not to provide a feature?
+               (string-match "-theme\\.el$" file))))))
   "Return a list of libraries in the package directory DIRECTORY.
 DIRECTORY is assumed to contain the libraries belonging to a single
 package.  Some assumptions are made about what directories and what

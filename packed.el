@@ -137,12 +137,12 @@ If optional PACKAGE also matches that regular expression also then don't
 ignore the directory.
 
 Other reasons exist why a directory could be ignored."
-  (and packed-ignore-directory-regexp
-       (string-match packed-ignore-directory-regexp
-                     (file-name-nondirectory
-                      (directory-file-name directory)))
-       (or (not package)
-           (not (string-match packed-ignore-directory-regexp package)))))
+  (let ((filename (packed-filename directory)))
+    (and (not (member filename '("RCS" "CVS")))
+         packed-ignore-directory-regexp
+         (string-match packed-ignore-directory-regexp filename)
+         (or (not package)
+             (not (string-match packed-ignore-directory-regexp package))))))
 
 (defmacro packed-with-file (file &rest body)
   "Execute BODY in a buffer containing the contents of FILE.

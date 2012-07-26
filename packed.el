@@ -274,9 +274,40 @@ files should be ignored."
     lp))
 
 
-;;; TODO Byte Compile.
-;;  TODO (defun packed-compile (directory))
-;;  TODO (defun packed-recompile (directory &optional force))
+;;; Byte Compile.
+
+(defun packed-compile-package (directory &optional package force)
+  (unless noninteractive
+    (save-some-buffers)
+    (force-mode-line-update))
+  (with-current-buffer (get-buffer-create byte-compile-log-buffer)
+    (setq default-directory (expand-file-name directory))
+    (unless (eq major-mode 'compilation-mode)
+      (compilation-mode))
+    (let ((default-directory default-directory)
+          (skip-count 0)
+          (fail-count 0)
+          (lib-count 0)
+          (dir-count 0)
+          file dir last-dir)
+      (displaying-byte-compile-warnings
+       (dolist (elt (packed-libraries directory package t))
+         (setq file (car elt)
+               dir (file-name-nondirectory file))
+         (if (cdr elt)
+             (case (byte-recompile-file file force 0)
+               (no-byte-compile (setq skip-count (1+ skip-count)))
+               ((t)             (setq  lib-count (1+  lib-count)))
+               ((nil)           (setq fail-count (1+ fail-count))))
+           (setq skip-count (1+ skip-count)))
+         (unless (eq last-dir dir)
+           (setq last-dir dir dir-count (1+ dir-count)))))
+      (message "Done (Total of %d file%s compiled%s%s%s)"
+	       lib-count (if (= lib-count 1) "" "s")
+	       (if (> fail-count 0) (format ", %d failed"  fail-count) "")
+	       (if (> skip-count 0) (format ", %d skipped" skip-count) "")
+	       (if (> dir-count 1)
+                   (format " in %d directories" dir-count) "")))))
 
 
 ;;; Autoloads.

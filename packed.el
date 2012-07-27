@@ -4,7 +4,7 @@
 
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Created: 20120624
-;; Version: 0.1.0
+;; Version: 0.2.0
 ;; Status: beta
 ;; Homepage: http://tarsius.github.com/packed
 ;; Keywords: compile, convenience, lisp
@@ -26,19 +26,16 @@
 
 ;;; Commentary:
 
-;; This is a beta release.  Version numbers are inspired by how
-;; Emacs is versioned - 1.1.0 will be the first stable version.
-
 ;; Packed provides some package manager agnostic utilities to work with
 ;; packages.  As far as Packed is concerned packages are collections of
 ;; Emacs Lisp libraries that are stored in a dedicated directory such as
-;; a vcs repository.
+;; a vcs repository.  And libraries are Emacs Lisp files that provide the
+;; correct feature (matching the filename).
 
-;;; TODO:
-;; TODO generally Packed still has to become much smarter
-;; TODO assert that auto-save and backup files are always ignored
-;; TODO handle disappearing files gracefully
-;; TODO implement substitutes for `byte-recompile-directory'
+;; Where a package manager might depend on metadata, Packed instead uses
+;; some heuristics to get the same information -- that is slower and might
+;; also fail at times but avoids having to create the metadata in the
+;; first place.
 
 ;;; Code:
 

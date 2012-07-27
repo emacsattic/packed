@@ -160,15 +160,15 @@ FILE should be an Emacs lisp source file."
   (let ((filesym (make-symbol "--file--")))
     `(let ((,filesym ,file))
        (save-match-data
-	 (save-excursion
-	   (if (and ,filesym (not (equal ,filesym buffer-file-name)))
-	       (with-temp-buffer
-		 (insert-file-contents ,filesym)
-		 (with-syntax-table emacs-lisp-mode-syntax-table
-		   ,@body))
-	     (goto-char (point-min))
-	     (with-syntax-table emacs-lisp-mode-syntax-table
-	       ,@body)))))))
+         (save-excursion
+           (if (and ,filesym (not (equal ,filesym buffer-file-name)))
+               (with-temp-buffer
+                 (insert-file-contents ,filesym)
+                 (with-syntax-table emacs-lisp-mode-syntax-table
+                   ,@body))
+             (goto-char (point-min))
+             (with-syntax-table emacs-lisp-mode-syntax-table
+               ,@body)))))))
 
 (defun packed-library-p (file &optional package)
   "Return non-nil if FILE is an Emacs source library."
@@ -313,10 +313,10 @@ files should be ignored."
          (unless (eq last-dir dir)
            (setq last-dir dir dir-count (1+ dir-count)))))
       (message "Done (Total of %d file%s compiled%s%s%s)"
-	       lib-count (if (= lib-count 1) "" "s")
-	       (if (> fail-count 0) (format ", %d failed"  fail-count) "")
-	       (if (> skip-count 0) (format ", %d skipped" skip-count) "")
-	       (if (> dir-count 1)
+               lib-count (if (= lib-count 1) "" "s")
+               (if (> fail-count 0) (format ", %d failed"  fail-count) "")
+               (if (> skip-count 0) (format ", %d skipped" skip-count) "")
+               (if (> dir-count 1)
                    (format " in %d directories" dir-count) "")))))
 
 

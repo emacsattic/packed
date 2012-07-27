@@ -32,6 +32,9 @@
 
 ;;; Code:
 
+(eval-when-compile
+  (require 'cl)) ; destructuring-bind ecase
+
 (require 'magit)
 (require 'packed)
 
@@ -50,30 +53,30 @@
      commit nil (or package (packed-filename repository)) t)))
 
 (defun packed-git-libraries-1 (commit directory package &optional top-level)
-  (let* ((objects
+  (let* ((regexp "^[0-9]\\{6\\} \\([^ ]+\\) [a-z0-9]\\{40\\}\t\\(.+\\)$")
+         (objects
           (mapcar (lambda (line)
-                    (string-match
-                     (concat "^[0-9]\\{6\\} \\([^ ]+\\) "
-                             "[a-z0-9]\\{40\\}\t\\(.+\\)$") line)
+                    (string-match regexp line)
                     (list (match-string 2 line)
                           (intern (match-string 1 line))))
                   (magit-git-lines "ls-tree" "--full-tree"
                                    (concat commit ":" directory))))
-         (searchp (not (assoc ".nosearch" objects))))
+         (searchp (not (assoc ".nosearch" objects)))
+         files)
     (when (or top-level searchp)
-      (mapcan
-       (lambda (object)
-         (destructuring-bind (file type) object
-           (setq file (concat (and directory (file-name-as-directory directory))
-                              file))
-           (ecase type
-             (blob (and searchp
-                        (packed-git-library-p commit file package)
-                        (list file)))
-             (tree (unless (packed-ignore-directory-p file package)
-                     (packed-git-libraries-1 commit file package)))
-             (commit))))
-       objects))))
+      (dolist (object objects)
+        (destructuring-bind (file type) object
+          (setq file (concat (and directory (file-name-as-directory directory))
+                             file))
+          (ecase type
+            (blob (and searchp
+                       (packed-git-library-p commit file package)
+                       (push file files)))
+            (tree (unless (packed-ignore-directory-p file package)
+                    (setq files (nconc files (packed-git-libraries-1
+                                              commit file package)))))
+            (commit))))
+      (sort files 'string<))))
 
 (provide 'packed-git)
 ;; Local Variables:

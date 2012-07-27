@@ -42,8 +42,14 @@
 
 ;;; Code:
 
-(require 'autoload)
 (require 'bytecomp)
+
+(eval-when-compile
+  (require 'cl)) ; case, push
+
+(declare-function autoload-rubric "autoload")
+(declare-function autoload-find-destination "autoload")
+(declare-function autoload-file-load-name "autoload")
 
 
 ;;; Options.
@@ -151,7 +157,7 @@ current buffer.  Move to beginning of buffer before executing BODY.
 
 FILE should be an Emacs lisp source file."
   (declare (indent 1) (debug t))
-  (let ((filesym (gensym "file")))
+  (let ((filesym (make-symbol "--file--")))
     `(let ((,filesym ,file))
        (save-match-data
 	 (save-excursion
@@ -192,13 +198,16 @@ FILE should be an Emacs lisp source file."
 DIRECTORY is assumed to contain the libraries belonging to a single
 package.  Some assumptions are made about what directories and what
 files should be ignored."
-  (mapcan (lambda (elt)
-            (when (or all (cdr elt))
-              (list (if full
-                        (car elt)
-                      (file-relative-name (car elt) directory)))))
-          (packed-libraries-1 directory
-                              (or package (packed-filename directory)))))
+  ;; avoid cl blasphemy
+  (let (libraries)
+    (dolist (elt (packed-libraries-1
+                  directory (or package (packed-filename directory))))
+      (when (or all (cdr elt))
+        (setq libraries (cons (if full
+                                  (car elt)
+                                (file-relative-name (car elt) directory))
+                              libraries))))
+    libraries))
 
 (defun packed-libraries-1 (directory &optional package)
   (let (libraries)
@@ -233,8 +242,12 @@ files should be ignored."
          (error "Cannot determine mainfile of %s" package))))
 
 (defun packed-mainfile-2 (name libraries)
-  (car (member* (concat "^" (regexp-quote name) (packed-el-regexp) "$")
-                libraries :test 'string-match :key 'file-name-nondirectory)))
+  ;; avoid cl blasphemy
+  (let ((regexp (concat "^" (regexp-quote name) (packed-el-regexp) "$")))
+    (catch 'found
+      (dolist (lib libraries)
+        (when (string-match regexp (file-name-nondirectory lib))
+          (throw 'found lib))))))
 
 (defun packed-filename (file)
   (file-name-nondirectory (directory-file-name file)))
@@ -326,6 +339,7 @@ files should be ignored."
          fundamental-mode-hook
          prog-mode-hook
          emacs-lisp-mode-hook)
+     (require 'autoload)
      (prog2
          (unless (file-exists-p generated-autoload-file)
            (write-region

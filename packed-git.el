@@ -35,22 +35,21 @@
 (require 'magit)
 (require 'packed)
 
-(defun packed-git-library-p (commit file &optional package raw)
+(defun packed-git-library-p (commit file &optional package)
   (with-temp-buffer
     (magit-git-insert (list "show" (concat commit ":" file)))
     (goto-char (point-min))
     (setq buffer-file-name file)
     (set-buffer-modified-p nil)
     (with-syntax-table emacs-lisp-mode-syntax-table
-      (packed-library-p file package raw))))
+      (packed-library-p file package))))
 
-(defun packed-git-libraries (repository commit &optional package raw)
+(defun packed-git-libraries (repository commit &optional package)
   (let ((default-directory repository))
     (packed-git-libraries-1
-     commit nil (or package (packed-filename repository)) raw t)))
+     commit nil (or package (packed-filename repository)) t)))
 
-(defun packed-git-libraries-1 (commit directory package
-                                      &optional raw top-level)
+(defun packed-git-libraries-1 (commit directory package &optional top-level)
   (let* ((objects
           (mapcar (lambda (line)
                     (string-match
@@ -69,10 +68,10 @@
                               file))
            (ecase type
              (blob (and searchp
-                        (packed-git-library-p commit file package raw)
+                        (packed-git-library-p commit file package)
                         (list file)))
              (tree (unless (packed-ignore-directory-p file package)
-                     (packed-git-libraries-1 commit file package raw)))
+                     (packed-git-libraries-1 commit file package)))
              (commit))))
        objects))))
 

@@ -1,10 +1,10 @@
-;;; packed.el --- Emacs package utilities
+;;; packed.el --- package manager agnostic Emacs Lisp package utilities
 
 ;; Copyright (C) 2012  Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Created: 20120624
-;; Version: 0.2.0
+;; Version: 0.2.1
 ;; Status: beta
 ;; Homepage: http://tarsius.github.com/packed
 ;; Keywords: compile, convenience, lisp
@@ -26,16 +26,17 @@
 
 ;;; Commentary:
 
-;; Packed provides some package manager agnostic utilities to work with
-;; packages.  As far as Packed is concerned packages are collections of
-;; Emacs Lisp libraries that are stored in a dedicated directory such as
-;; a vcs repository.  And libraries are Emacs Lisp files that provide the
-;; correct feature (matching the filename).
+;; Packed provides some package manager agnostic utilities to work
+;; with Emacs Lisp packages.  As far as Packed is concerned packages
+;; are collections of Emacs Lisp libraries that are stored in a
+;; dedicated directory such as a vcs repository.  And libraries are
+;; Emacs Lisp files that provide the correct feature (matching the
+;; filename).
 
-;; Where a package manager might depend on metadata, Packed instead uses
-;; some heuristics to get the same information -- that is slower and might
-;; also fail at times but avoids having to create the metadata in the
-;; first place.
+;; Where a package manager might depend on metadata, Packed instead
+;; uses some heuristics to get the same information -- that is slower
+;; and might also fail at times but avoids having to create the
+;; metadata in the first place.
 
 ;;; Code:
 

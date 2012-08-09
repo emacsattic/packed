@@ -396,7 +396,12 @@ files should be ignored."
     (or features
         (and (goto-char (point-min))
              (re-search-forward
-              "^(provide-me\\(?:[\s\t\n]\"\\(.+\\)\"\\)?)" nil t)
+              "^(provide-theme[\s\t\n]+'\\([^)]+\\))" nil t)
+             (list (intern (concat (match-string 1)
+                                   "-theme"))))
+        (and (goto-char (point-min))
+             (re-search-forward
+              "^(provide-me\\(?:[\s\t\n]+\"\\(.+\\)\"\\)?)" nil t)
              (list (intern (concat (match-string 1)
                                    (file-name-sans-extension
                                     (file-name-nondirectory

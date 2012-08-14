@@ -215,16 +215,42 @@ files should be ignored."
              (push (cons f (packed-library-p f package)) libraries))))
     (nreverse libraries)))
 
-(defun packed-mainfile (directory &optional package noerror)
-  (packed-mainfile-1 (or package (packed-filename directory))
-                     (packed-libraries directory package)
-                     noerror))
+(defun packed-main-library (directory &optional package noerror nosingle)
+  "Return the main library from the package directory DIRECTORY.
+Optional PACKAGE is the name of the package; if it is nil the
+basename of DIRECTORY is used as the package name.
 
-(defun packed-mainfile-1 (package libraries &optional noerror)
-  (cond ((not (cdr libraries))
+Return the library whose basename matches the package name.  If
+that fails append \"-mode\" to the package name, respectively
+remove that substring and try again.
+
+Unless optional NOSINGLE is non-nil and if there is only a single
+library return that even if it doesn't match the package name.
+
+If no library matches raise an error or if optional NOERROR is
+non-nil return nil."
+  (packed-main-library-1 (or package (packed-filename directory))
+                         (packed-libraries directory package)
+                         noerror))
+
+(defun packed-main-library-1 (package libraries &optional noerror nosingle)
+  "Return the main library among LIBRARIES of the package PACKAGE.
+PACKAGE is a package name, a string.
+
+Return the library whose basename matches the package name.  If
+that fails append \"-mode\" to the package name, respectively
+remove that substring, and try again.
+
+Unless optional NOSINGLE is non-nil and if there is only a single
+library return that even if it doesn't match the package name.
+
+If no library matches raise an error or if optional NOERROR is
+non-nil return nil."
+  (cond ((and (not nosingle)
+              (not (cdr libraries)))
          (car libraries))
-        ((packed-mainfile-2 package libraries))
-        ((packed-mainfile-2
+        ((packed-main-library-2 package libraries))
+        ((packed-main-library-2
           (if (string-match "-mode$" package)
               (substring package 0 -5)
             (concat package "-mode"))
@@ -232,9 +258,9 @@ files should be ignored."
         (noerror
          nil)
         (t
-         (error "Cannot determine mainfile of %s" package))))
+         (error "Cannot determine main library of %s" package))))
 
-(defun packed-mainfile-2 (name libraries)
+(defun packed-main-library-2 (name libraries)
   ;; avoid cl blasphemy
   (let ((regexp (concat "^" (regexp-quote name) (packed-el-regexp) "$")))
     (catch 'found

@@ -184,9 +184,7 @@ FILE should be an Emacs lisp source file."
                              (not (string-match
                                    packed-ignore-library-regexp
                                    package))))))
-           (or (packed-library-feature file)
-               ;; $$$ is it okay for themes not to provide a feature?
-               (string-match "-theme\\.el$" file))))))
+           (packed-library-feature file)))))
 
 (defun packed-libraries (directory &optional package full all)
   "Return a list of libraries in the package directory DIRECTORY.

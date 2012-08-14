@@ -269,6 +269,7 @@ non-nil return nil."
           (throw 'found lib))))))
 
 (defun packed-filename (file)
+  "Return the filename (aka basename) of FILE."
   (file-name-nondirectory (directory-file-name file)))
 
 

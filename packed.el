@@ -260,9 +260,9 @@ non-nil return nil."
         (t
          (error "Cannot determine main library of %s" package))))
 
-(defun packed-main-library-2 (name libraries)
+(defun packed-main-library-2 (package libraries)
   ;; avoid cl blasphemy
-  (let ((regexp (concat "^" (regexp-quote name) (packed-el-regexp) "$")))
+  (let ((regexp (concat "^" (regexp-quote package) (packed-el-regexp) "$")))
     (catch 'found
       (dolist (lib libraries)
         (when (string-match regexp (file-name-nondirectory lib))

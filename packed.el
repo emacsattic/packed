@@ -138,9 +138,7 @@ and the file name is displayed in the echo area."
   "Whether DIRECTORY should be ignored based on it's filename.
 Return t if DIRECTORY's filename matches `packed-ignore-directory-regexp'.
 If optional PACKAGE also matches that regular expression also then don't
-ignore the directory.
-
-Other reasons exist why a directory could be ignored."
+ignore the directory."
   (let ((filename (packed-filename directory)))
     (and (not (member filename '("RCS" "CVS")))
          packed-ignore-directory-regexp
@@ -152,7 +150,6 @@ Other reasons exist why a directory could be ignored."
   "Execute BODY in a buffer containing the contents of FILE.
 If FILE is nil or equal to `buffer-file-name' execute BODY in the
 current buffer.  Move to beginning of buffer before executing BODY.
-
 FILE should be an Emacs lisp source file."
   (declare (indent 1) (debug t))
   (let ((filesym (make-symbol "--file--")))

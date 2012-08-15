@@ -493,18 +493,81 @@ library.  If a file lacks an expected feature then loading it using
 
 ;;; Info Pages.
 
-(defun packed-info-path (directory)
-  (let (ip in-ip)
-    (dolist (f (directory-files directory t))
-      (cond ((member (file-name-nondirectory f) '("." "..")))
+(defconst packed-texinfo-regexp "\\.\\(txi\\|texi\\(nfo\\)?\\)\\'")
+
+(defun packed-enable-info-dir-file (dir-file)
+  "Add the directory containing DIR-FILE to `Info-directory-list'.
+Before doing so initialize the default value of the latter if
+that hasn't happened yet."
+  (when (file-exists-p dir-file)
+    (require 'info)
+    (info-initialize)
+    (add-to-list 'Info-directory-list (file-name-directory dir-file))))
+
+(defun packed-install-info (directory dir-file)
+  "Install info files from DIRECTORY in DIR-FILE.
+
+In the directory containing DIR-FILE create links to info and
+texinfo files in DIRECTORY and recursively all non-hidden
+subdirectories; and add the info files to DIR-FILE.  Files are
+linked to instead of copied to make it easier to later remove
+files from a particular DIRECTORY.
+
+If a texinfo file exists create a link to it and create the info
+file in the directory containing DIR-FILE.  The corresponding
+info file if it also exists in DIRECTORY is ignored."
+  (let ((default-directory (file-name-directory dir-file)))
+    (dolist (f (packed-info-files directory))
+      (let ((l (file-name-nondirectory f)))
+        (make-symbolic-link f l t)
+        (when (string-match packed-texinfo-regexp f)
+          (call-process "makeinfo" nil nil nil l)
+          (setq l (concat (file-name-sans-extension l) ".info")))
+        (call-process "install-info" nil nil nil l
+                      (file-name-nondirectory dir-file))))))
+
+(defun packed-uninstall-info (directory dir-file)
+  "Uninstall info files located in DIRECTORY from DIR-FILE.
+
+In the directory containing DIR-FILE remove links to info and
+texinfo files in DIRECTORY and recursively all non-hidden
+subdirectories; and remove the info files from DIR-FILE.
+
+When removing a symlink to a texinfo file also remove the info
+file created from it.  Also remove the corresponding entries from
+DIR-FILE."
+  (let ((default-directory (file-name-directory dir-file))
+        (r (concat "^" (regexp-quote directory))))
+    (dolist (f (directory-files packed-info-directory "^[^.]"))
+      (when (and (file-symlink-p f)
+                 (string-match r (file-truename f)))
+        (when (string-match packed-texinfo-regexp f)
+          (delete-file f)
+          (setq f (concat (file-name-sans-extension f) ".info")))
+        (call-process "install-info" nil nil nil "--delete" f "dir")
+        (delete-file f)))))
+
+(defun packed-info-files (directory)
+  "Return a list of info and texinfo files in DIRECTORY.
+
+Return a list of absolute filenames of info and texinfo files in
+DIRECTORY and recursively all non-hidden subdirectories.  If both
+an info file and the corresponding texinfo file exist only
+include the latter in the returned list."
+  (let (files name)
+    (dolist (f (directory-files directory t "^[^.]"))
+      (cond ((file-directory-p f)
+             (setq files (nconc (packed-info-files f) files)))
             ((file-regular-p f)
-             (and (not in-ip)
-                  (string-match "\.info$" (file-name-nondirectory f))
-                  (add-to-list 'ip (directory-file-name directory))
-                  (setq in-ip t)))
-            ((not (packed-ignore-directory-p directory))
-             (setq ip (nconc (packed-info-path f) ip)))))
-    ip))
+             (cond ((and (string-match "\\.info\\'" f)
+                         (setq name (file-name-sans-extension f))
+                         (not (file-exists-p (concat name ".texinfo")))
+                         (not (file-exists-p (concat name ".texi")))
+                         (not (file-exists-p (concat name ".txi"))))
+                    (setq files (cons f files)))
+                   ((string-match "\\.\\(txi\\|texi\\(nfo\\)?\\)\\'" f)
+                    (setq files (cons f files)))))))
+    (sort files 'string<)))
 
 (provide 'packed)
 ;; Local Variables:

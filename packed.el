@@ -538,7 +538,7 @@ file created from it.  Also remove the corresponding entries from
 DIR-FILE."
   (let ((default-directory (file-name-directory dir-file))
         (r (concat "^" (regexp-quote directory))))
-    (dolist (f (directory-files packed-info-directory "^[^.]"))
+    (dolist (f (directory-files default-directory "^[^.]"))
       (when (and (file-symlink-p f)
                  (string-match r (file-truename f)))
         (when (string-match packed-texinfo-regexp f)

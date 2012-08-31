@@ -493,6 +493,10 @@ library.  If a file lacks an expected feature then loading it using
 
 ;;; Info Pages.
 
+(defvar packed-ginstall-info
+  (or (executable-find "ginstall-info")
+      (executable-find "install-info")))
+
 (defconst packed-texinfo-regexp "\\.\\(txi\\|texi\\(nfo\\)?\\)\\'")
 
 (defun packed-enable-info-dir-file (dir-file)
@@ -523,7 +527,7 @@ info file if it also exists in DIRECTORY is ignored."
         (when (string-match packed-texinfo-regexp f)
           (call-process "makeinfo" nil nil nil l)
           (setq l (concat (file-name-sans-extension l) ".info")))
-        (call-process "install-info" nil nil nil l
+        (call-process packed-ginstall-info nil nil nil l
                       (file-name-nondirectory dir-file))))))
 
 (defun packed-uninstall-info (directory dir-file)
@@ -544,7 +548,7 @@ DIR-FILE."
         (when (string-match packed-texinfo-regexp f)
           (delete-file f)
           (setq f (concat (file-name-sans-extension f) ".info")))
-        (call-process "install-info" nil nil nil "--delete" f "dir")
+        (call-process packed-ginstall-info nil nil nil "--delete" f "dir")
         (delete-file f)))))
 
 (defun packed-info-files (directory)

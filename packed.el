@@ -227,21 +227,25 @@ basename of DIRECTORY is used as the package name.
 
 Return the library whose basename matches the package name.  If
 that fails append \"-mode\" to the package name, respectively
-remove that substring, and try again.
+remove that substring, and try again.  That library must also
+provide the correct feature.
 
 Unless optional NOSINGLE is non-nil and if there is only a single
 Emacs lisp file return that even if it doesn't match the package
 name.
 
-If no library matches raise an error or if optional NOERROR is
-non-nil return nil."
+If the main library cannot be found raise an error or if optional
+NOERROR is non-nil return nil."
   (packed-main-library-1 (or package (packed-filename directory))
-                         (packed-libraries directory package)
+                         (packed-libraries-1 directory package)
                          noerror nosingle))
 
 (defun packed-main-library-1 (package libraries &optional noerror nosingle)
   "Return the main library among LIBRARIES of the package PACKAGE.
-PACKAGE is a package name, a string.
+PACKAGE is a package name, a string.  LIBRARIES is a list of full
+library filenames or an alist as returned by `packed-libraries-1'.
+In the latter case also ensure that the main library provides the
+correct feature.
 
 Return the library whose basename matches the package name.  If
 that fails append \"-mode\" to the package name, respectively
@@ -252,26 +256,34 @@ library return that even if it doesn't match the package name.
 
 If no library matches raise an error or if optional NOERROR is
 non-nil return nil."
-  (cond ((and (not nosingle)
-              (not (cdr libraries)))
-         (car libraries))
-        ((packed-main-library-2 package libraries))
-        ((packed-main-library-2
-          (if (string-match "-mode$" package)
-              (substring package 0 -5)
-            (concat package "-mode"))
-          libraries))
-        (noerror
-         nil)
-        (t
-         (error "Cannot determine main library of %s" package))))
+  (let ((match
+         (cond ((and (not nosingle)
+                     (not (cdr libraries)))
+                (car libraries))
+               ((packed-main-library-2 package libraries))
+               ((packed-main-library-2
+                 (if (string-match "-mode$" package)
+                     (substring package 0 -5)
+                   (concat package "-mode"))
+                 libraries)))))
+    (cond ((and (not match)
+                (not noerror))
+           (error "Cannot determine main library of %s" package))
+          ((atom match)
+           match)
+          ((cdr match)
+           (car match))
+          ((not noerror)
+           (error "Main library %s provides no or wrong feature"
+                  (car match))))))
 
 (defun packed-main-library-2 (package libraries)
   ;; avoid cl blasphemy
   (let ((regexp (concat "^" (regexp-quote package) (packed-el-regexp) "$")))
     (catch 'found
       (dolist (lib libraries)
-        (when (string-match regexp (file-name-nondirectory lib))
+        (when (string-match regexp (file-name-nondirectory
+                                    (if (consp lib) (car lib) lib)))
           (throw 'found lib))))))
 
 (defun packed-filename (file)

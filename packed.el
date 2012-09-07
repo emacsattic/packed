@@ -186,16 +186,21 @@ FILE should be an Emacs lisp source file."
                                    package))))))
            (packed-library-feature file)))))
 
-(defun packed-libraries (directory &optional package full all)
+(defun packed-libraries (directory &optional package full relaxed)
   "Return a list of libraries in the package directory DIRECTORY.
-DIRECTORY is assumed to contain the libraries belonging to a single
-package.  Some assumptions are made about what directories and what
-files should be ignored."
+DIRECTORY is assumed to contain the libraries belonging to a
+single package.  Some assumptions are made about what directories
+and what files should be considered.
+
+If optional FULL is non-nil return absolute paths otherwise paths
+relative to DIRECTORY.  If optional RELAXED is non-nil include
+Emacs lisp files that don't provide a feature or only features
+that don't match the filename."
   ;; avoid cl blasphemy
   (let (libraries)
     (dolist (elt (packed-libraries-1
                   directory (or package (packed-filename directory))))
-      (when (or all (cdr elt))
+      (when (or relaxed (cdr elt))
         (setq libraries (cons (if full
                                   (car elt)
                                 (file-relative-name (car elt) directory))

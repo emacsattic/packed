@@ -227,16 +227,17 @@ basename of DIRECTORY is used as the package name.
 
 Return the library whose basename matches the package name.  If
 that fails append \"-mode\" to the package name, respectively
-remove that substring and try again.
+remove that substring, and try again.
 
 Unless optional NOSINGLE is non-nil and if there is only a single
-library return that even if it doesn't match the package name.
+Emacs lisp file return that even if it doesn't match the package
+name.
 
 If no library matches raise an error or if optional NOERROR is
 non-nil return nil."
   (packed-main-library-1 (or package (packed-filename directory))
                          (packed-libraries directory package)
-                         noerror))
+                         noerror nosingle))
 
 (defun packed-main-library-1 (package libraries &optional noerror nosingle)
   "Return the main library among LIBRARIES of the package PACKAGE.

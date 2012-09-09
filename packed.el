@@ -186,7 +186,8 @@ FILE should be an Emacs lisp source file."
                                    package))))))
            (packed-library-feature file)))))
 
-(defun packed-libraries (directory &optional package full relaxed)
+(defun packed-libraries (directory
+                         &optional package full relaxed nonrecursive)
   "Return a list of libraries in the package directory DIRECTORY.
 DIRECTORY is assumed to contain the libraries belonging to a
 single package.  Some assumptions are made about what directories
@@ -199,7 +200,8 @@ that don't match the filename."
   ;; avoid cl blasphemy
   (let (libraries)
     (dolist (elt (packed-libraries-1
-                  directory (or package (packed-filename directory))))
+                  directory (or package (packed-filename directory))
+                  nonrecursive))
       (when (or relaxed (cdr elt))
         (setq libraries (cons (if full
                                   (car elt)
@@ -207,11 +209,12 @@ that don't match the filename."
                               libraries))))
     libraries))
 
-(defun packed-libraries-1 (directory &optional package)
+(defun packed-libraries-1 (directory &optional package nonrecursive)
   (let (libraries)
     (dolist (f (directory-files directory t "^[^.]"))
       (cond ((file-directory-p f)
-             (or (file-exists-p (expand-file-name ".nosearch" f))
+             (or nonrecursive
+                 (file-exists-p (expand-file-name ".nosearch" f))
                  (packed-ignore-directory-p f package)
                  (setq libraries (nconc (packed-libraries-1 f package)
                                         libraries))))

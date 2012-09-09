@@ -166,7 +166,9 @@ FILE should be an Emacs lisp source file."
                ,@body)))))))
 
 (defun packed-library-p (file &optional package)
-  "Return non-nil if FILE is an Emacs source library."
+  "Return non-nil if FILE is an Emacs source library.
+Actually provide the feature provided by FILE (which has to match
+it's filename)."
   (let ((name (file-name-nondirectory file)))
     (save-match-data
       (and (string-match (packed-el-regexp) name)
@@ -210,6 +212,14 @@ that don't match the filename."
     libraries))
 
 (defun packed-libraries-1 (directory &optional package nonrecursive)
+  "Return a list of Emacs lisp files in the package directory DIRECTORY.
+DIRECTORY is assumed to contain the libraries belonging to a
+single package.  Some assumptions are made about what directories
+and what files should be considered.
+
+The return value has the form ((LIBRARY . FEATURE)...).  FEATURE
+is nil if LIBRARY does not provide a feature or only features
+that don't match the filename."
   (let (libraries)
     (dolist (f (directory-files directory t "^[^.]"))
       (cond ((file-directory-p f)

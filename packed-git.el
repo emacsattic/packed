@@ -39,6 +39,12 @@
 (require 'packed)
 
 (defun packed-git-library-p (commit file &optional package)
+  "Return non-nil if FILE is an Emacs source library.
+Actually provide the feature provided by FILE (which has to match
+it's filename).
+
+COMMIT has to be an existing commit in the current repository
+and FILE has to exist in that commit."
   (with-temp-buffer
     (magit-git-insert (list "show" (concat commit ":" file)))
     (goto-char (point-min))

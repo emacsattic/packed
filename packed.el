@@ -67,12 +67,13 @@
 
 (defun packed-el-suffixes (&optional nosuffix must-suffix)
   "Return a list of the valid suffixes of Emacs Lisp source libraries.
-Unlike `get-load-suffixes' don't return the suffixes for byte-compile
-destinations just those of source files.
+Unlike `get-load-suffixes' don't return the suffixes for
+byte-compile destinations just those of source files.
 
-If NOSUFFIX is non-nil the `.el' part is omitted.
-IF MUST-SUFFIX is non-nil all returned suffixes contain `.el'.
-This uses the variables `load-suffixes' and `load-file-rep-suffixes'."
+If NOSUFFIX is non-nil the `.el' part is omitted.  IF MUST-SUFFIX
+is non-nil all returned suffixes contain `.el'.  This uses the
+variables `load-suffixes' (from which it removes \".elc\") and
+`load-file-rep-suffixes'."
   (append (unless nosuffix
             (let ((load-suffixes (remove ".elc" load-suffixes)))
               (get-load-suffixes)))
@@ -533,7 +534,7 @@ library.  If a file lacks an expected feature then loading it using
 (defun packed-enable-info-dir-file (dir-file)
   "Add the directory containing DIR-FILE to `Info-directory-list'.
 Before doing so initialize the default value of the latter if
-that hasn't happened yet."
+that hasn't happened yet.  If DIR-FILE doesn't exist do nothing."
   (when (file-exists-p dir-file)
     (require 'info)
     (info-initialize)

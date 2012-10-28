@@ -461,10 +461,6 @@ non-nil return nil."
                                     (file-name-nondirectory
                                      buffer-file-name)))))))))
 
-;; It is wrong for a library foo.el to provide foo-mode but there are many
-;; packages that do just that and I don't want to deal with it right now.
-(defvar packed-library-feature--accept-mode-suffix t)
-
 (defun packed-library-feature (file)
   "Return the first valid feature actually provided by FILE.
 
@@ -488,15 +484,7 @@ library.  If a file lacks an expected feature then loading it using
       (if (or (eq feature (intern (file-name-nondirectory file)))
               (string-match (concat (convert-standard-filename
                                      (symbol-name feature)) "$")
-                            file)
-              ;; $$$ kludge
-              (and packed-library-feature--accept-mode-suffix
-                   (or (equal (symbol-name feature)
-                              (concat (file-name-nondirectory file) "-mode"))
-                       (string-match
-                        (concat (convert-standard-filename
-                                 (concat (symbol-name feature) "-mode")) "$")
-                        file))))
+                            file))
           (setq features nil)
         (setq feature nil)))
     feature))

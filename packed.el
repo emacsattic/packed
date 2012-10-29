@@ -168,8 +168,12 @@ FILE should be an Emacs lisp source file."
 
 (defun packed-library-p (file &optional package)
   "Return non-nil if FILE is an Emacs source library.
-Actually provide the feature provided by FILE (which has to match
+Actually return the feature provided by FILE (which has to match
 it's filename)."
+  (and (packed-library-name-p file package)
+       (packed-library-feature file)))
+
+(defun packed-library-name-p (file &optional package)
   (let ((name (file-name-nondirectory file)))
     (save-match-data
       (and (string-match (packed-el-regexp) name)
@@ -186,8 +190,7 @@ it's filename)."
                          (or (not package)
                              (not (string-match
                                    packed-ignore-library-regexp
-                                   package))))))
-           (packed-library-feature file)))))
+                                   package))))))))))
 
 (defun packed-libraries (directory
                          &optional package full relaxed nonrecursive)

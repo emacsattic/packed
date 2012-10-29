@@ -38,6 +38,48 @@
 (require 'magit)
 (require 'packed)
 
+(defmacro packed-with-blob (commit file &rest body)
+  (declare (indent 2))
+  (let ((f (make-symbol "file")))
+    `(let ((,f ,file))
+       (with-temp-buffer
+         (magit-with-silent-modifications
+          (magit-git-insert
+           (list "cat-file" "-p" (concat ,commit ":" ,f))))
+         (setq buffer-file-name ,f)
+         (packed-set-coding-system ,f)
+         (set-buffer-modified-p nil)
+         (goto-char (point-min))
+         ,@body))))
+
+(defun packed-set-coding-system (file)
+  (save-excursion
+    (goto-char (point-min))
+    (let ((buffer-undo-list t)
+	  (coding
+	   (or coding-system-for-read
+	       (and set-auto-coding-function
+		    (save-excursion
+		      (funcall set-auto-coding-function
+			       file (- (point-max) (point-min)))))
+	       ;; for dos-w32.el; see archive-set-buffer-as-visiting-file
+	       (let ((file-name-handler-alist
+		      '(("" . archive-file-name-handler))))
+		 (car (find-operation-coding-system
+		       'insert-file-contents
+		       (cons file (current-buffer)) t))))))
+      (unless (or coding-system-for-read
+                  enable-multibyte-characters)
+        (setq coding
+              (coding-system-change-text-conversion coding 'raw-text)))
+      (unless (memq coding '(nil no-conversion))
+        (decode-coding-region (point-min) (point-max) coding)
+	(setq last-coding-system-used coding))
+      (set-buffer-modified-p nil)
+      (kill-local-variable 'buffer-file-coding-system)
+      (after-insert-file-set-coding (- (point-max) (point-min)))
+      coding)))
+
 (defun packed-git-library-p (commit file &optional package)
   "Return non-nil if FILE is an Emacs source library.
 Actually return the feature provided by FILE (which has to match
@@ -46,12 +88,8 @@ it's filename).
 COMMIT has to be an existing commit in the current repository
 and FILE has to exist in that commit."
   (and (packed-library-name-p file package)
-       (with-temp-buffer
-         (magit-git-insert (list "show" (concat commit ":" file)))
-         (goto-char (point-min))
-         (setq buffer-file-name file)
-         (with-syntax-table emacs-lisp-mode-syntax-table
-           (packed-library-feature file)))))
+       (packed-with-blob commit file
+         (packed-library-feature file))))
 
 (defun packed-git-libraries (repository commit &optional package)
   (let ((default-directory repository))

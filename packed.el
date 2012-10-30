@@ -84,7 +84,7 @@ variables `load-suffixes' (from which it removes \".elc\") and
   "Return the valid suffixes of Emacs libraries as a regular expression."
   (concat (regexp-opt (packed-el-suffixes nil t)) "\\'"))
 
-(defun packed-source-file (elc)
+(defun packed-el-file (elc)
   "Return the Emacs source file for byte-compile destination ELC."
   (let ((standard (concat (file-name-sans-extension
                            (file-name-sans-extension elc)) ".el"))

@@ -74,15 +74,37 @@ If NOSUFFIX is non-nil the `.el' part is omitted.  IF MUST-SUFFIX
 is non-nil all returned suffixes contain `.el'.  This uses the
 variables `load-suffixes' (from which it removes \".elc\") and
 `load-file-rep-suffixes'."
+  (packed--suffixes ".elc" nosuffix must-suffix))
+
+(defun packed-elc-suffixes (&optional nosuffix must-suffix)
+  "Return a list of the valid suffixes of Emacs Lisp source libraries.
+Unlike `get-load-suffixes' don't return the suffixes for
+source files just those of byte-compile destinations.
+
+If NOSUFFIX is non-nil the `.elc' part is omitted.  IF MUST-SUFFIX
+is non-nil all returned suffixes contain `.elc'.  This uses the
+variables `load-suffixes' (from which it removes \".el\") and
+`load-file-rep-suffixes'."
+  (packed--suffixes ".el" nosuffix must-suffix))
+
+(defun packed--suffixes (remove-suffix &optional nosuffix must-suffix)
   (append (unless nosuffix
-            (let ((load-suffixes (remove ".elc" load-suffixes)))
+            (let ((load-suffixes (remove remove-suffix load-suffixes)))
               (get-load-suffixes)))
           (unless must-suffix
             load-file-rep-suffixes)))
 
 (defun packed-el-regexp ()
-  "Return the valid suffixes of Emacs libraries as a regular expression."
+  "Return the valid suffixes of Emacs libraries as a regular expression.
+The returned regular expression matches source files but not
+byte-compile destinations and always expects the \".el\" suffix."
   (concat (regexp-opt (packed-el-suffixes nil t)) "\\'"))
+
+(defun packed-elc-regexp ()
+  "Return the valid suffixes of byte-compile destinations as a regexp.
+The returned regular expression matches byte-compile destinations
+but not source files and always expects the \".elc\" suffix."
+  (concat (regexp-opt (packed-elc-suffixes nil t)) "\\'"))
 
 (defun packed-el-file (elc)
   "Return the Emacs source file for byte-compile destination ELC."

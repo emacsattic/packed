@@ -198,16 +198,16 @@ it's filename)."
        (packed-library-feature file)))
 
 (defun packed-library-name-p (file &optional package)
-  (let ((name (file-name-nondirectory file)))
+  (let ((filename (file-name-nondirectory file)))
     (save-match-data
-      (and (string-match (packed-el-regexp) name)
+      (and (string-match (packed-el-regexp) filename)
            (not (or (file-symlink-p file)
-                    (string-match "^\\." name)
-                    (string-equal name dir-locals-file)
-                    (auto-save-file-name-p name)
+                    (string-match "^\\." filename)
+                    (string-equal filename dir-locals-file)
+                    (auto-save-file-name-p filename)
                     (if package
-                        (string-equal name (concat package "-pkg.el"))
-                      (string-match "-pkg\\.el$" name))
+                        (string-equal filename (concat package "-pkg.el"))
+                      (string-match "-pkg\\.el$" filename))
                     (and packed-ignore-library-regexp
                          (string-match packed-ignore-library-regexp
                                        (file-name-nondirectory file))

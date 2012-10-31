@@ -395,8 +395,10 @@ non-nil return nil."
                lib-count (if (= lib-count 1) "" "s")
                (if (> fail-count 0) (format ", %d failed"  fail-count) "")
                (if (> skip-count 0) (format ", %d skipped" skip-count) "")
-               (if (> dir-count 1)
-                   (format " in %d directories" dir-count) "")))))
+               (if (> dir-count  1)
+                   (format " in %d director%s" dir-count
+                           (if (= dir-count 1) "y" "ies"))
+                 "")))))
 
 
 ;;; Autoloads.

@@ -544,7 +544,8 @@ library.  If a file lacks an expected feature then loading it using
   (or (executable-find "ginstall-info")
       (executable-find "install-info")))
 
-(defconst packed-texinfo-regexp "\\.\\(txi\\|texi\\(nfo\\)?\\)\\'")
+(defconst packed-texinfo-regexp
+  (concat "\\." (regexp-opt (list "texi" "texinfo" "txi")) "$"))
 
 (defun packed-enable-info-dir-file (dir-file)
   "Add the directory containing DIR-FILE to `Info-directory-list'.

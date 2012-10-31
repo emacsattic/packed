@@ -117,6 +117,8 @@ but not source files and always expects the \".elc\" suffix."
         (setq file nil)))
     (or file standard)))
 
+(defalias 'packed-elc-file 'byte-compile-dest-file)
+
 (defun packed-locate-library (library &optional nosuffix path interactive-call)
   "Show the precise file name of Emacs library LIBRARY.
 Unlike `locate-library' don't return the byte-compile destination

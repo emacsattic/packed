@@ -81,22 +81,39 @@
       coding)))
 
 (defun packed-git-library-p (commit file &optional package)
-  "Return non-nil if FILE is an Emacs source library.
-Actually return the feature provided by FILE (which has to match
-it's filename).
+  "Return non-nil if FILE is an Emacs source library and part of package.
+Actually return the feature provided by FILE.  For anything else
+including bundled libraries return nil.
 
-COMMIT has to be an existing commit in the current repository
-and FILE has to exist in that commit."
+COMMIT has to be an existing commit in the current repository (as
+determined using `default-directory') and FILE has to exist in
+that commit.
+
+See function `packed-library-p' for more information."
   (and (packed-library-name-p file package)
        (packed-with-blob commit file
          (packed-library-feature file))))
 
 (defun packed-git-libraries (repository commit &optional package)
+  "Return a list of libraries that are part of PACKAGE located in REPOSITORY.
+REPOSITORY has to be a git repository and is assumed to contain
+the libraries belonging to a single package.  COMMIT has to be an
+existing commit in that repository.
+
+See function `packed-libraries' for more information."
   (let ((default-directory repository))
     (packed-git-libraries-1
      commit nil (or package (packed-filename repository)) t)))
 
 (defun packed-git-libraries-1 (commit directory package &optional top-level)
+  "Return a list of Emacs lisp files in the package directory DIRECTORY.
+DIRECTORY is assumed to contain the libraries belonging to a
+single package.
+
+COMMIT has to be an existing commit in the current repository
+and FILE has to exist in that commit.
+
+See function `packed-libraries-1' for more information."
   (let* ((regexp "^[0-9]\\{6\\} \\([^ ]+\\) [a-z0-9]\\{40\\}\t\\(.+\\)$")
          (objects
           (mapcar (lambda (line)

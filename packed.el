@@ -153,23 +153,31 @@ and the file name is displayed in the echo area."
           (message "No library %s in search path" library)))
     file))
 
-(defvar packed-ignore-library-regexp
-  (regexp-opt (list "^t$" "test")))
+(defconst packed-ignore-library-regexp
+  (regexp-opt (list "^t$" "test" "^ert.el$")))
 
-(defvar packed-ignore-directory-regexp
-  (regexp-opt (list "^t$" "test")))
+(defconst packed-ignore-directory-regexp
+  (regexp-opt (list "RCS" "CVS" "^t$" "test")))
 
-(defun packed-ignore-directory-p (directory &optional package)
-  "Whether DIRECTORY should be ignored based on it's filename.
-Return t if DIRECTORY's filename matches `packed-ignore-directory-regexp'.
-If optional PACKAGE also matches that regular expression also then don't
-ignore the directory."
-  (let ((filename (packed-filename directory)))
-    (and (not (member filename '("RCS" "CVS")))
-         packed-ignore-directory-regexp
-         (string-match packed-ignore-directory-regexp filename)
-         (or (not package)
-             (not (string-match packed-ignore-directory-regexp package))))))
+(defun packed-ignore-directory-p (directory package)
+  "Return t if DIRECTORY should be ignored when searching for libraries.
+DIRECTORY and all libraries it and it's subdirectories contain
+should be ignored if it contains a file named \".nosearch\", is
+a hidden directory, or it's filename matches
+`packed-ignore-directory-regexp'.
+
+If PACKAGE also matches that regular expression then don't ignore
+the directory based on it's filename.
+
+Normally DIRECTORY should be an absolute path; if it is not then
+this function does not check for \".nosearch\"s existence.  This
+distinction is useful when the directory does not actually exist."
+  (or (and (string-match packed-ignore-directory-regexp
+                         (packed-filename directory))
+           (or (not package)
+               (not (string-match packed-ignore-directory-regexp package))))
+      (and (file-name-absolute-p directory)
+           (file-exists-p (expand-file-name ".nosearch" directory)))))
 
 (defmacro packed-with-file (file &rest body)
   "Execute BODY in a buffer containing the contents of FILE.
@@ -191,13 +199,40 @@ FILE should be an Emacs lisp source file."
                ,@body)))))))
 
 (defun packed-library-p (file &optional package)
-  "Return non-nil if FILE is an Emacs source library.
-Actually return the feature provided by FILE (which has to match
-it's filename)."
+  "Return non-nil if FILE is an Emacs source library and part of package.
+Actually return the feature provided by FILE.  For anything else
+including bundled libraries return nil.
+
+An Emacs lisp file is considered a library if it isn't a hidden
+file and provides the correct feature, that is a feature that
+matches it's filename (and possibly parts of the path leading to
+it).
+
+For some libraries this function actually returns nil because
+they should not exist because they are not part of the package,
+and if they do the callers of this function needs to pretend they
+don't exist.  This includes libraries that are bundled with
+packages that depend on them.
+
+Of course it is not possible to come up with some regular
+expression that magically detects those bundled libraries.  But
+some libraries like ert.el are known to be bundled a lot, so some
+known files are included in `packed-ignore-library-regexp' and if
+a library filename matches that then nil is returned by this
+function.
+
+However if PACKAGE also matches that regular expression then this
+function *does* return t - even ert.el is part of some package:
+ert.  All of this might not always be successful but at least we
+tried.
+
+Note that the callers might also ignore files for which this
+function would return t.  See `packed-ignore-directory-p."
   (and (packed-library-name-p file package)
        (packed-library-feature file)))
 
 (defun packed-library-name-p (file &optional package)
+  "Implements the name-based part of what `packed-library-p' does."
   (let ((filename (file-name-nondirectory file)))
     (save-match-data
       (and (string-match (packed-el-regexp) filename)
@@ -208,31 +243,35 @@ it's filename)."
                     (if package
                         (string-equal filename (concat package "-pkg.el"))
                       (string-match "-pkg\\.el$" filename))
-                    (and packed-ignore-library-regexp
-                         (string-match packed-ignore-library-regexp
+                    (and (string-match packed-ignore-library-regexp
                                        (file-name-nondirectory file))
                          (or (not package)
                              (not (string-match
                                    packed-ignore-library-regexp
                                    package))))))))))
 
-(defun packed-libraries (directory
-                         &optional package full relaxed nonrecursive)
-  "Return a list of libraries in the package directory DIRECTORY.
+(defun packed-libraries (directory &optional package full nonrecursive)
+  "Return a list of libraries that are part of PACKAGE located in DIRECTORY.
 DIRECTORY is assumed to contain the libraries belonging to a
-single package.  Some assumptions are made about what directories
-and what files should be considered.
+single package.
+
+Some libraries are excluded from the returned list because they
+are hidden files, located in hidden directories, or considered
+not to be part of the package; see `packed-ignore-directory-p'
+and `packed-library-p' for more information.  PACKAGE or else the
+filename of DIRECTORY is passed to these functions.
 
 If optional FULL is non-nil return absolute paths otherwise paths
-relative to DIRECTORY.  If optional RELAXED is non-nil include
-Emacs lisp files that don't provide a feature or only features
-that don't match the filename."
+relative to DIRECTORY.
+
+If optional NONRECURSIVE only return libraries directly located
+in DIRECTORY."
   ;; avoid cl blasphemy
   (let (libraries)
     (dolist (elt (packed-libraries-1
                   directory (or package (packed-filename directory))
                   nonrecursive))
-      (when (or relaxed (cdr elt))
+      (when (cdr elt)
         (setq libraries (cons (if full
                                   (car elt)
                                 (file-relative-name (car elt) directory))
@@ -242,8 +281,13 @@ that don't match the filename."
 (defun packed-libraries-1 (directory &optional package nonrecursive)
   "Return a list of Emacs lisp files in the package directory DIRECTORY.
 DIRECTORY is assumed to contain the libraries belonging to a
-single package.  Some assumptions are made about what directories
-and what files should be considered.
+single package.
+
+Some libraries are excluded from the returned list because they
+are hidden files, located in hidden directories, or considered
+not to be part of the package; see `packed-ignore-directory-p'
+and `packed-library-p' for more information.  PACKAGE or else the
+filename of DIRECTORY is passed to these functions.
 
 The return value has the form ((LIBRARY . FEATURE)...).  FEATURE
 is nil if LIBRARY does not provide a feature or only features
@@ -252,7 +296,6 @@ that don't match the filename."
     (dolist (f (directory-files directory t "^[^.]"))
       (cond ((file-directory-p f)
              (or nonrecursive
-                 (file-exists-p (expand-file-name ".nosearch" f))
                  (packed-ignore-directory-p f package)
                  (setq libraries (nconc (packed-libraries-1 f package)
                                         libraries))))
@@ -268,8 +311,11 @@ basename of DIRECTORY is used as the package name.
 
 Return the library whose basename matches the package name.  If
 that fails append \"-mode\" to the package name, respectively
-remove that substring, and try again.  That library must also
-provide the correct feature.
+remove that substring, and try again.
+
+The library must provide the correct feature; that is the feature
+which matches the filename (and possibly parts of the path leading
+to it).
 
 Unless optional NOSINGLE is non-nil and if there is only a single
 Emacs lisp file return that even if it doesn't match the package
@@ -293,7 +339,8 @@ that fails append \"-mode\" to the package name, respectively
 remove that substring, and try again.
 
 Unless optional NOSINGLE is non-nil and if there is only a single
-library return that even if it doesn't match the package name.
+Emacs lisp file return that even if it doesn't match the package
+name.
 
 If no library matches raise an error or if optional NOERROR is
 non-nil return nil."
@@ -357,9 +404,8 @@ non-nil return nil."
                   (add-to-list 'lp (directory-file-name directory))
                   (setq in-lp t)))
             ((file-directory-p f)
-             (and (not (packed-ignore-directory-p directory package))
-                  (not (file-exists-p (expand-file-name ".nosearch" f)))
-                  (setq lp (nconc (packed-load-path f package) lp))))))
+             (unless (packed-ignore-directory-p directory package)
+               (setq lp (nconc (packed-load-path f package) lp))))))
     lp))
 
 

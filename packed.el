@@ -467,14 +467,7 @@ non-nil return nil."
          prog-mode-hook
          emacs-lisp-mode-hook)
      (require 'autoload)
-     (prog2
-         (unless (file-exists-p generated-autoload-file)
-           (write-region
-            (replace-regexp-in-string
-             ";; no-byte-compile: t\n" ""
-             (autoload-rubric generated-autoload-file))
-            nil generated-autoload-file))
-         (progn ,@body)
+     (prog1 (progn ,@body)
        (let (buf)
          (while (setq buf (find-buffer-visiting generated-autoload-file))
            (with-current-buffer buf
@@ -484,8 +477,7 @@ non-nil return nil."
 (defun packed-update-autoloads (dest path)
   (when (or dest (setq dest (packed-loaddefs-file)))
     (packed-with-loaddefs dest
-      (update-directory-autoloads path)
-      (byte-compile-file dest t))))
+      (update-directory-autoloads path))))
 
 (defun packed-remove-autoloads (dest path)
   (when (or dest (setq dest (packed-loaddefs-file)))
@@ -499,8 +491,7 @@ non-nil return nil."
             (when (and (file-directory-p d)
                        (file-exists-p d))
               (dolist (f (directory-files d t (packed-el-regexp)))
-                (autoload-find-destination f (autoload-file-load-name f)))))))
-      (byte-compile-file dest t))))
+                (autoload-find-destination f (autoload-file-load-name f))))))))))
 
 
 ;;; Features.

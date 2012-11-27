@@ -43,7 +43,7 @@
 (require 'bytecomp)
 
 (eval-when-compile
-  (require 'cl)) ; case, push
+  (require 'cl-lib))
 
 (declare-function autoload-rubric "autoload")
 (declare-function autoload-find-destination "autoload")
@@ -430,7 +430,7 @@ non-nil return nil."
          (setq file (car elt)
                dir (file-name-nondirectory file))
          (if (cdr elt)
-             (case (byte-recompile-file file force 0)
+             (cl-case (byte-recompile-file file force 0)
                (no-byte-compile (setq skip-count (1+ skip-count)))
                ((t)             (setq  lib-count (1+  lib-count)))
                ((nil)           (setq fail-count (1+ fail-count))))

@@ -4,7 +4,7 @@
 
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Created: 20120624
-;; Version: 0.3.2
+;; Version: 0.3.3
 ;; Status: beta
 ;; Homepage: http://tarsius.github.com/packed
 ;; Keywords: compile, convenience, lisp

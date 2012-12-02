@@ -48,6 +48,8 @@
 (declare-function autoload-rubric "autoload")
 (declare-function autoload-find-destination "autoload")
 (declare-function autoload-file-load-name "autoload")
+(declare-function info-initialize "info")
+(defvar Info-directory-list)
 
 
 ;;; Options.

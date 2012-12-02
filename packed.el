@@ -230,7 +230,7 @@ ert.  All of this might not always be successful but at least we
 tried.
 
 Note that the callers might also ignore files for which this
-function would return t.  See `packed-ignore-directory-p."
+function would return t.  See `packed-ignore-directory-p'."
   (and (packed-library-name-p file package)
        (packed-library-feature file)))
 

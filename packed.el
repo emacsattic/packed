@@ -385,6 +385,7 @@ non-nil return nil."
 ;;; Load Path.
 
 (defun packed-add-to-load-path (directory &optional package)
+  "Add DIRECTORY and subdirectories to `load-path' if they contain libraries."
   (mapc (apply-partially 'add-to-list 'load-path)
         (packed-load-path directory package)))
 
@@ -399,6 +400,7 @@ Elements of `load-path' which no longer exist are not removed."
         (directory-files directory t "^[^.]" t)))
 
 (defun packed-load-path (directory &optional package)
+  "Return a list of directories below DIRECTORY that contain libraries."
   (let (lp in-lp)
     (dolist (f (directory-files directory t "^[^.]"))
       (cond ((file-regular-p f)

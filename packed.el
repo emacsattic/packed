@@ -459,7 +459,7 @@ Elements of `load-path' which no longer exist are not removed."
   (locate-dominating-file (or directory default-directory)
                           packed-loaddefs-filename))
 
-(defun packed-load-autoloads (&optional directory)
+(defun packed-load-loaddefs (&optional directory)
   (let ((file (packed-loaddefs-file directory)))
     (if file
         (load file)

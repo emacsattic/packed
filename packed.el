@@ -388,14 +388,15 @@ non-nil return nil."
   (mapc (apply-partially 'add-to-list 'load-path)
         (packed-load-path directory package)))
 
-(defun packed-remove-from-load-path (directory &optional package recursive)
-  (cond (recursive
-         (dolist (path load-path)
-           (when (string-match (concat (regexp-quote directory) "^") path)
-             (setq load-path (delete path load-path)))))
-        (t
-         (dolist (path (packed-load-path directory package))
-           (setq load-path (delete path load-path))))))
+(defun packed-remove-from-load-path (directory)
+  "Remove DIRECTORY and it's subdirectories from `load-path'.
+Elements of `load-path' which no longer exist are not removed."
+  (setq directory (directory-file-name (expand-file-name directory)))
+  (setq load-path (delete directory load-path))
+  (mapc (lambda (f)
+          (when (file-directory-p f)
+            (packed-remove-from-load-path f)))
+        (directory-files directory t "^[^.]" t)))
 
 (defun packed-load-path (directory &optional package)
   (let (lp in-lp)

@@ -456,8 +456,10 @@ Elements of `load-path' which no longer exist are not removed."
 ;;; Autoloads.
 
 (defun packed-loaddefs-file (&optional directory)
-  (locate-dominating-file (or directory default-directory)
-                          packed-loaddefs-filename))
+  (let ((dir (locate-dominating-file (or directory default-directory)
+                                     packed-loaddefs-filename)))
+    (when dir
+      (expand-file-name packed-loaddefs-filename dir))))
 
 (defun packed-load-loaddefs (&optional directory)
   (let ((file (packed-loaddefs-file directory)))
@@ -467,7 +469,7 @@ Elements of `load-path' which no longer exist are not removed."
 
 (defmacro packed-with-loaddefs (dest &rest body)
   (declare (indent 1))
-  `(let ((generated-autoload-file dest)
+  `(let ((generated-autoload-file ,dest)
          ;; Generating autoloads runs theses hooks; disable them.
          fundamental-mode-hook
          prog-mode-hook
@@ -494,6 +496,7 @@ Elements of `load-path' which no longer exist are not removed."
       (with-temp-buffer
         (let ((autoload-modified-buffers (list (current-buffer))))
           (dolist (d path)
+            (setq d (file-name-as-directory d))
             (when (and (file-directory-p d)
                        (file-exists-p d))
               (dolist (f (directory-files d t (packed-el-regexp)))

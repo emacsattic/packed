@@ -645,7 +645,8 @@ DIR-FILE."
           (delete-file f)
           (setq f (concat (file-name-sans-extension f) ".info")))
         (call-process packed-ginstall-info nil nil nil "--delete" f "dir")
-        (delete-file f)))))
+        (when (file-exists-p f)
+          (delete-file f))))))
 
 (defun packed-info-files (directory)
   "Return a list of info and texinfo files in DIRECTORY.

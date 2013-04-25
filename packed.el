@@ -41,9 +41,7 @@
 ;;; Code:
 
 (require 'bytecomp)
-
-(eval-when-compile
-  (require 'cl-lib))
+(require 'cl-lib)
 
 (declare-function autoload-rubric "autoload")
 (declare-function autoload-find-destination "autoload")
@@ -269,17 +267,15 @@ relative to DIRECTORY.
 
 If optional NONRECURSIVE only return libraries directly located
 in DIRECTORY."
-  ;; avoid cl blasphemy
-  (let (libraries)
-    (dolist (elt (packed-libraries-1
-                  directory (or package (packed-filename directory))
-                  nonrecursive))
-      (when (cdr elt)
-        (setq libraries (cons (if full
-                                  (car elt)
-                                (file-relative-name (car elt) directory))
-                              libraries))))
-    libraries))
+  (cl-mapcan
+   (lambda (elt)
+     (when (cdr elt)
+       (list (if full
+                 (car elt)
+               (file-relative-name (car elt) directory)))))
+   (packed-libraries-1 directory
+                       (or package (packed-filename directory))
+                       nonrecursive)))
 
 (defun packed-libraries-1 (directory &optional package nonrecursive)
   "Return a list of Emacs lisp files in the package directory DIRECTORY.

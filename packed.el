@@ -413,6 +413,17 @@ Elements of `load-path' which no longer exist are not removed."
 
 ;;; Byte Compile.
 
+(defmacro packed-without-mode-hooks (&rest body)
+  (declare (indent 0))
+  `(let (after-change-major-mode-hook
+         prog-mode-hook
+         emacs-lisp-mode-hook)
+     ,@body))
+
+(defun packed-byte-compile-file (filename &optional load)
+  "Like `byte-compile-file' but don't run any mode hooks."
+  (packed-without-mode-hooks (byte-compile-file filename load)))
+
 (defun packed-compile-package (directory &optional package force)
   (unless noninteractive
     (save-some-buffers)
@@ -465,14 +476,10 @@ Elements of `load-path' which no longer exist are not removed."
 
 (defmacro packed-with-loaddefs (dest &rest body)
   (declare (indent 1))
-  `(let ((generated-autoload-file ,dest)
-         ;; Generating autoloads runs theses hooks; disable them.
-         fundamental-mode-hook
-         prog-mode-hook
-         emacs-lisp-mode-hook)
+  `(packed-without-mode-hooks
      (require 'autoload)
-     (prog1 (progn ,@body)
-       (let (buf)
+     (let ((generated-autoload-file ,dest) buf)
+       (prog1 (progn ,@body)
          (while (setq buf (find-buffer-visiting generated-autoload-file))
            (with-current-buffer buf
              (save-buffer)

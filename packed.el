@@ -154,7 +154,7 @@ and the file name is displayed in the echo area."
     file))
 
 (defconst packed-ignore-library-regexp
-  (regexp-opt (list "^t$" "test" "^ert.el$")))
+  (regexp-opt (list "^t$" "test")))
 
 (defconst packed-ignore-directory-regexp
   (regexp-opt (list "RCS" "CVS" "^t$" "test")))

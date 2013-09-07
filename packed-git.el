@@ -38,7 +38,7 @@
   (let ((f (make-symbol "file")))
     `(let ((,f ,file))
        (with-temp-buffer
-         (magit-with-silent-modifications
+         (with-silent-modifications
            ;; (magit-git-insert
            ;;  (list "cat-file" "-p" (concat ,commit ":" ,f)))
            ;; work around https://github.com/magit/magit/issues/544

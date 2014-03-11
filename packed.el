@@ -49,8 +49,7 @@
 (declare-function info-initialize "info")
 (defvar Info-directory-list)
 
-
-;;; Options.
+;;; Options
 
 (defgroup packed nil
   "Emacs package utilities."
@@ -62,8 +61,7 @@
   :group 'packed
   :type 'file)
 
-
-;;; Libraries.
+;;; Libraries
 
 (defun packed-el-suffixes (&optional nosuffix must-suffix)
   "Return a list of the valid suffixes of Emacs Lisp source libraries.
@@ -377,8 +375,7 @@ non-nil return nil."
   "Return the filename (aka basename) of FILE."
   (file-name-nondirectory (directory-file-name file)))
 
-
-;;; Load Path.
+;;; Load Path
 
 (defun packed-add-to-load-path (directory &optional package)
   "Add DIRECTORY and subdirectories to `load-path' if they contain libraries."
@@ -410,8 +407,7 @@ Elements of `load-path' which no longer exist are not removed."
                (setq lp (nconc (packed-load-path f package) lp))))))
     lp))
 
-
-;;; Byte Compile.
+;;; Byte Compile
 
 (defmacro packed-without-mode-hooks (&rest body)
   (declare (indent 0))
@@ -459,8 +455,7 @@ Elements of `load-path' which no longer exist are not removed."
                            (if (= dir-count 1) "y" "ies"))
                  "")))))
 
-
-;;; Autoloads.
+;;; Autoloads
 
 (defun packed-loaddefs-file (&optional directory)
   (let ((dir (locate-dominating-file (or directory default-directory)
@@ -505,8 +500,7 @@ Elements of `load-path' which no longer exist are not removed."
               (dolist (f (directory-files d t (packed-el-regexp)))
                 (autoload-find-destination f (autoload-file-load-name f))))))))))
 
-
-;;; Features.
+;;; Features
 
 (defconst packed-provided-regexp "\
 \(\\(?:cc-\\|silentcomp-\\)?provide[\s\t\n]+'\
@@ -588,8 +582,7 @@ library.  If a file lacks an expected feature then loading it using
                  (add-to-list 'hard feature))))))
     (list hard soft)))
 
-
-;;; Info Pages.
+;;; Info Pages
 
 (defvar packed-ginstall-info
   (or (executable-find "ginstall-info")

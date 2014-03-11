@@ -159,13 +159,13 @@ and the file name is displayed in the echo area."
 
 (defun packed-ignore-directory-p (directory package)
   "Return t if DIRECTORY should be ignored when searching for libraries.
-DIRECTORY and all libraries it and it's subdirectories contain
+DIRECTORY and all libraries it and its subdirectories contain
 should be ignored if it contains a file named \".nosearch\", is
-a hidden directory, or it's filename matches
+a hidden directory, or its filename matches
 `packed-ignore-directory-regexp'.
 
 If PACKAGE also matches that regular expression then don't ignore
-the directory based on it's filename.
+the directory based on its filename.
 
 Normally DIRECTORY should be an absolute path; if it is not then
 this function does not check for \".nosearch\"s existence.  This
@@ -204,7 +204,7 @@ including bundled libraries return nil.
 
 An Emacs lisp file is considered a library if it isn't a hidden
 file and provides the correct feature, that is a feature that
-matches it's filename (and possibly parts of the path leading to
+matches its filename (and possibly parts of the path leading to
 it).
 
 For some libraries this function actually returns nil because
@@ -383,7 +383,7 @@ non-nil return nil."
         (packed-load-path directory package)))
 
 (defun packed-remove-from-load-path (directory)
-  "Remove DIRECTORY and it's subdirectories from `load-path'.
+  "Remove DIRECTORY and its subdirectories from `load-path'.
 Elements of `load-path' which no longer exist are not removed."
   (setq directory (directory-file-name (expand-file-name directory)))
   (setq load-path (delete directory load-path))

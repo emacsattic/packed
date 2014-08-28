@@ -1,8 +1,13 @@
 ;;; packed-git.el --- Utilities for Emacs packages living in Git repositories
 
-;; Copyright (C) 2012-2013  Jonas Bernoulli
+;; Copyright (C) 2012-2014  Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
+;; Homepage: http://tarsius.github.com/packed
+;; Keywords: compile, convenience, lisp, package, library
+
+;; Package: packed-git
+;; Package-Requires: ((cl-lib "0.5") (magit "2.1.0"))
 
 ;; This file is not part of GNU Emacs.
 

@@ -403,7 +403,7 @@ Elements of `load-path' which no longer exist are not removed."
                   (add-to-list 'lp (directory-file-name directory))
                   (setq in-lp t)))
             ((file-directory-p f)
-             (unless (packed-ignore-directory-p directory package)
+             (unless (packed-ignore-directory-p f package)
                (setq lp (nconc (packed-load-path f package) lp))))))
     lp))
 

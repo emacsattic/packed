@@ -42,6 +42,7 @@
 
 (require 'bytecomp)
 (require 'cl-lib)
+(require 'dash)
 
 (declare-function autoload-rubric "autoload")
 (declare-function autoload-find-destination "autoload")
@@ -140,8 +141,7 @@ and the file name is displayed in the echo area."
                                       (apply-partially
                                        'locate-file-completion-table
                                        load-path (get-load-suffixes)))
-                     nil nil
-                     t))
+                     nil nil t))
   (let ((file (locate-file (substitute-in-file-name library)
                            (or path load-path)
                            (packed-el-suffixes nosuffix))))
@@ -363,13 +363,10 @@ non-nil return nil."
                   (car match))))))
 
 (defun packed-main-library-2 (package libraries)
-  ;; avoid cl blasphemy
   (let ((regexp (concat "^" (regexp-quote package) (packed-el-regexp) "$")))
-    (catch 'found
-      (dolist (lib libraries)
-        (when (string-match regexp (file-name-nondirectory
-                                    (if (consp lib) (car lib) lib)))
-          (throw 'found lib))))))
+    (--first (string-match regexp (file-name-nondirectory
+                                   (if (consp it) (car it) it)))
+             libraries)))
 
 (defun packed-filename (file)
   "Return the filename (aka basename) of FILE."
@@ -379,18 +376,17 @@ non-nil return nil."
 
 (defun packed-add-to-load-path (directory &optional package)
   "Add DIRECTORY and subdirectories to `load-path' if they contain libraries."
-  (mapc (apply-partially 'add-to-list 'load-path)
-        (packed-load-path directory package)))
+  (--each (packed-load-path directory package)
+    (add-to-list 'load-path it)))
 
 (defun packed-remove-from-load-path (directory)
   "Remove DIRECTORY and its subdirectories from `load-path'.
 Elements of `load-path' which no longer exist are not removed."
   (setq directory (directory-file-name (expand-file-name directory)))
   (setq load-path (delete directory load-path))
-  (mapc (lambda (f)
-          (when (file-directory-p f)
-            (packed-remove-from-load-path f)))
-        (directory-files directory t "^[^.]" t)))
+  (--each (directory-files directory t "^[^.]" t)
+    (when (file-directory-p it)
+      (packed-remove-from-load-path it))))
 
 (defun packed-load-path (directory &optional package)
   "Return a list of directories below DIRECTORY that contain libraries."
@@ -457,16 +453,14 @@ Elements of `load-path' which no longer exist are not removed."
 ;;; Autoloads
 
 (defun packed-loaddefs-file (&optional directory)
-  (let ((dir (locate-dominating-file (or directory default-directory)
-                                     packed-loaddefs-filename)))
-    (when dir
-      (expand-file-name packed-loaddefs-filename dir))))
+  (--when-let (locate-dominating-file (or directory default-directory)
+                                      packed-loaddefs-filename)
+    (expand-file-name packed-loaddefs-filename it)))
 
 (defun packed-load-loaddefs (&optional directory)
-  (let ((file (packed-loaddefs-file directory)))
-    (if file
-        (load file)
-      (message "Cannot locate loaddefs file for %s" directory))))
+  (--if-let (packed-loaddefs-file directory)
+      (load it)
+    (message "Cannot locate loaddefs file for %s" directory)))
 
 (defmacro packed-with-loaddefs (dest &rest body)
   (declare (indent 1))
@@ -492,12 +486,11 @@ Elements of `load-path' which no longer exist are not removed."
       ;; anymore (which is the case here because it is empty).
       (with-temp-buffer
         (let ((autoload-modified-buffers (list (current-buffer))))
-          (dolist (d path)
-            (setq d (file-name-as-directory d))
-            (when (and (file-directory-p d)
-                       (file-exists-p d))
-              (dolist (f (directory-files d t (packed-el-regexp)))
-                (autoload-find-destination f (autoload-file-load-name f))))))))))
+          (--each path
+            (when (file-directory-p it)
+              (--each (directory-files it t (packed-el-regexp))
+                (autoload-find-destination
+                 it (autoload-file-load-name it))))))))))
 
 ;;; Features
 
@@ -514,10 +507,10 @@ Elements of `load-path' which no longer exist are not removed."
         (unless (save-match-data
                   (or (nth 3 (syntax-ppss))   ; in string
                       (nth 4 (syntax-ppss)))) ; in comment
-          (dolist (feature (cons (match-string 1)
-                                 (when (match-string 2)
-                                   (split-string (match-string 2) " " t))))
-            (add-to-list 'features (intern feature))))))
+          (--each (cons (match-string 1)
+                        (--when-let (match-string 2)
+                          (split-string it " " t)))
+            (add-to-list 'features (intern it))))))
     (or features
         (and (goto-char (point-min))
              (re-search-forward
@@ -546,19 +539,12 @@ This can be used to determine if an Emacs lisp file should be considered
 a library.  Not every Emacs lisp file has to provide a feature / be a
 library.  If a file lacks an expected feature then loading it using
 `require' still succeeds but causes an error."
-  (let ((features (packed-with-file file (packed-provided)))
-        feature)
-    (setq file (file-name-sans-extension
-                (file-name-sans-extension file)))
-    (while features
-      (setq feature (pop features))
-      (if (or (eq feature (intern (file-name-nondirectory file)))
-              (string-match (concat (convert-standard-filename
-                                     (symbol-name feature)) "$")
-                            file))
-          (setq features nil)
-        (setq feature nil)))
-    feature))
+  (setq file (file-name-sans-extension (file-name-sans-extension file)))
+  (--first (or (eq it (intern (file-name-nondirectory file)))
+               (string-match (concat (convert-standard-filename
+                                      (symbol-name it)) "$")
+                             file))
+           (packed-with-file file (packed-provided))))
 
 (defconst packed-required-regexp "\
 \(\\(?:cc-\\)?require[\s\t\n]+'\

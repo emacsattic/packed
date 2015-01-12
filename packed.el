@@ -529,12 +529,12 @@ This can be used to determine if an Emacs lisp file should be considered
 a library.  Not every Emacs lisp file has to provide a feature / be a
 library.  If a file lacks an expected feature then loading it using
 `require' still succeeds but causes an error."
-  (setq file (file-name-sans-extension (file-name-sans-extension file)))
-  (--first (or (eq it (intern (file-name-nondirectory file)))
-               (string-match (concat (convert-standard-filename
-                                      (symbol-name it)) "$")
-                             file))
-           (packed-with-file file (packed-provided))))
+  (let* ((name (file-name-sans-extension (file-name-sans-extension file)))
+         (symb (intern (file-name-nondirectory name))))
+    (--first (or (eq it symb)
+                 (string-suffix-p (convert-standard-filename (symbol-name it))
+                                  name))
+             (packed-with-file file (packed-provided)))))
 
 (defconst packed-required-regexp "\
 \(\\(?:cc-\\)?require[\s\t\n]+'\

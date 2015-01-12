@@ -236,7 +236,9 @@ function would return t.  See `packed-ignore-directory-p'."
     (save-match-data
       (and (string-match (packed-el-regexp) filename)
            (not (or (file-symlink-p file)
-                    (string-match "^\\." filename)
+                    (string-prefix-p "." filename)
+                    (string-suffix-p "-autoloads.el" filename)
+                    (string-suffix-p "loaddefs.el" filename)
                     (string-equal filename dir-locals-file)
                     (auto-save-file-name-p filename)
                     (if package

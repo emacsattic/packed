@@ -474,23 +474,21 @@ Elements of `load-path' which no longer exist are not removed."
              (kill-buffer)))))))
 
 (defun packed-update-autoloads (dest path)
-  (when (or dest (setq dest (packed-loaddefs-file)))
-    (packed-with-loaddefs dest
-      (update-directory-autoloads path))))
+  (packed-with-loaddefs dest
+    (update-directory-autoloads path)))
 
 (defun packed-remove-autoloads (dest path)
-  (when (or dest (setq dest (packed-loaddefs-file)))
-    (packed-with-loaddefs dest
-      ;; `autoload-find-destination' clears out autoloads associated
-      ;; with a file if they are not found in the current buffer
-      ;; anymore (which is the case here because it is empty).
-      (with-temp-buffer
-        (let ((autoload-modified-buffers (list (current-buffer))))
-          (--each path
-            (when (file-directory-p it)
-              (--each (directory-files it t (packed-el-regexp))
-                (autoload-find-destination
-                 it (autoload-file-load-name it))))))))))
+  (packed-with-loaddefs dest
+    ;; `autoload-find-destination' clears out autoloads associated
+    ;; with a file if they are not found in the current buffer
+    ;; anymore (which is the case here because it is empty).
+    (with-temp-buffer
+      (let ((autoload-modified-buffers (list (current-buffer))))
+        (--each path
+          (when (file-directory-p it)
+            (--each (directory-files it t (packed-el-regexp))
+              (autoload-find-destination
+               it (autoload-file-load-name it)))))))))
 
 ;;; Features
 

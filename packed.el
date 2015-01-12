@@ -515,15 +515,7 @@ Elements of `load-path' which no longer exist are not removed."
         (and (goto-char (point-min))
              (re-search-forward
               "^(provide-theme[\s\t\n]+'\\([^)]+\\))" nil t)
-             (list (intern (concat (match-string 1)
-                                   "-theme"))))
-        (and (goto-char (point-min))
-             (re-search-forward
-              "^(provide-me\\(?:[\s\t\n]+\"\\(.+\\)\"\\)?)" nil t)
-             (list (intern (concat (match-string 1)
-                                   (file-name-sans-extension
-                                    (file-name-nondirectory
-                                     buffer-file-name)))))))))
+             (list (intern (concat (match-string 1) "-theme")))))))
 
 (defun packed-library-feature (file)
   "Return the first valid feature actually provided by FILE.

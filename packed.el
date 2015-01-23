@@ -152,7 +152,7 @@ and the file name is displayed in the echo area."
     file))
 
 (defconst packed-ignore-library-regexp
-  (regexp-opt (list "^t$" "test")))
+  (regexp-opt (list "^\\." "^t$" "test" "autoloads" "loaddefs")))
 
 (defconst packed-ignore-directory-regexp
   (regexp-opt (list "RCS" "CVS" "^t$" "test")))
@@ -236,9 +236,6 @@ function would return t.  See `packed-ignore-directory-p'."
     (save-match-data
       (and (string-match (packed-el-regexp) filename)
            (not (or (file-symlink-p file)
-                    (string-prefix-p "." filename)
-                    (string-suffix-p "-autoloads.el" filename)
-                    (string-suffix-p "loaddefs.el" filename)
                     (string-equal filename dir-locals-file)
                     (auto-save-file-name-p filename)
                     (if package

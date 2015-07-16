@@ -7,7 +7,7 @@
 ;; Keywords: compile, convenience, lisp, package, library
 
 ;; Package: packed
-;; Package-Requires: ((cl-lib "0.5") (dash "2.10.0"))
+;; Package-Requires: ((cl-lib "0.5") (dash "2.10.0") (emacs "24.3"))
 
 ;; This file is not part of GNU Emacs.
 

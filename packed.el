@@ -152,10 +152,10 @@ and the file name is displayed in the echo area."
     file))
 
 (defconst packed-ignore-library-regexp
-  (regexp-opt (list "^\\." "^t$" "test" "autoloads" "loaddefs")))
+  "\\(?:^\\.\\|autoloads\\|loaddefs\\|tests?$\\)")
 
 (defconst packed-ignore-directory-regexp
-  (regexp-opt (list "RCS" "CVS" "^t$" "test")))
+  "\\(?:CVS\\|RCS\\|^t$\\|^tests?$\\)")
 
 (defun packed-ignore-directory-p (directory package)
   "Return t if DIRECTORY should be ignored when searching for libraries.
@@ -242,7 +242,7 @@ function would return t.  See `packed-ignore-directory-p'."
                         (string-equal filename (concat package "-pkg.el"))
                       (string-match "-pkg\\.el$" filename))
                     (and (string-match packed-ignore-library-regexp
-                                       (file-name-nondirectory file))
+                                       (file-name-sans-extension filename))
                          (or (not package)
                              (not (string-match
                                    packed-ignore-library-regexp

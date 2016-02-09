@@ -152,7 +152,7 @@ and the file name is displayed in the echo area."
     file))
 
 (defconst packed-ignore-library-regexp
-  "\\(?:^\\.\\|autoloads\\|loaddefs\\|tests?$\\)")
+  "\\(?:^\\.\\|-autoloads\\|-loaddefs\\|-tests?$\\)")
 
 (defconst packed-ignore-directory-regexp
   "\\(?:CVS\\|RCS\\|^t$\\|^tests?$\\)")

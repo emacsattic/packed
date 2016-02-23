@@ -150,10 +150,10 @@ and the file name is displayed in the echo area."
     file))
 
 (defconst packed-ignore-library-regexp
-  "\\(?:^\\.\\|-autoloads\\|-loaddefs\\|-tests?$\\)")
+  "\\(?:^\\.\\|-autoloads\\|-loaddefs\\|-tests?$\\|^ert$\\)")
 
 (defconst packed-ignore-directory-regexp
-  "\\(?:CVS\\|RCS\\|^t$\\|^tests?$\\)")
+  "\\(?:CVS\\|RCS\\|^t$\\|^tests?$\\|^vendor$\\|^script$\\)")
 
 (defun packed-ignore-directory-p (directory package)
   "Return t if DIRECTORY should be ignored when searching for libraries.

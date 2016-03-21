@@ -189,6 +189,8 @@ FILE should be an Emacs lisp source file."
            (if (and ,filesym (not (equal ,filesym buffer-file-name)))
                (with-temp-buffer
                  (insert-file-contents ,filesym)
+                 (setq buffer-file-name ,filesym)
+                 (set-buffer-modified-p nil)
                  (with-syntax-table emacs-lisp-mode-syntax-table
                    ,@body))
              (goto-char (point-min))
@@ -510,7 +512,15 @@ Elements of `load-path' which no longer exist are not removed."
         (and (goto-char (point-min))
              (re-search-forward
               "^(provide-theme[\s\t\n]+'\\([^)]+\\))" nil t)
-             (list (intern (concat (match-string 1) "-theme")))))))
+             (list (intern (concat (match-string 1)
+                                   "-theme"))))
+        (and (goto-char (point-min))
+             (re-search-forward
+              "^(provide-me\\(?:[\s\t\n]+\"\\(.+\\)\"\\)?)" nil t)
+             (list (intern (concat (match-string 1)
+                                   (file-name-sans-extension
+                                    (file-name-nondirectory
+                                     buffer-file-name)))))))))
 
 (defun packed-library-feature (file)
   "Return the first valid feature actually provided by FILE.

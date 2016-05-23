@@ -264,15 +264,14 @@ relative to DIRECTORY.
 
 If optional NONRECURSIVE only return libraries directly located
 in DIRECTORY."
-  (cl-mapcan
-   (lambda (elt)
-     (when (cdr elt)
-       (list (if full
-                 (car elt)
-               (file-relative-name (car elt) directory)))))
-   (packed-libraries-1 directory
-                       (or package (packed-filename directory))
-                       nonrecursive)))
+  (-keep (-lambda ((library . feature))
+           (and feature
+                (if full
+                    library
+                  (file-relative-name library directory))))
+         (packed-libraries-1 directory
+                             (or package (packed-filename directory))
+                             nonrecursive)))
 
 (defun packed-libraries-1 (directory &optional package nonrecursive)
   "Return a list of Emacs lisp files in the package directory DIRECTORY.

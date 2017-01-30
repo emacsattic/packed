@@ -158,7 +158,8 @@ if it is a hidden directory.
 Normally DIRECTORY should be an absolute path; if it is not then
 this function does not check for \".nosearch\"s existence.  This
 distinction is useful when the directory does not actually exist."
-  (or (string-match "^\\." (packed-filename directory))
+  (or (string-match "^\\."
+                    (file-name-nondirectory (directory-file-name directory)))
       (and (file-name-absolute-p directory)
            (file-exists-p (expand-file-name ".nosearch" directory)))))
 
@@ -251,9 +252,10 @@ name.
 
 If the main library cannot be found raise an error or if optional
 NOERROR is non-nil return nil."
-  (packed-main-library-1 (or package (packed-filename directory))
-                         (packed-libraries-1 directory)
-                         noerror nosingle))
+  (packed-main-library-1
+   (or package (file-name-nondirectory (directory-file-name directory)))
+   (packed-libraries-1 directory)
+   noerror nosingle))
 
 (defun packed-main-library-1 (package libraries &optional noerror nosingle)
   "Return the main library among LIBRARIES of the package PACKAGE.
@@ -298,10 +300,6 @@ non-nil return nil."
     (--first (string-match regexp (file-name-nondirectory
                                    (if (consp it) (car it) it)))
              libraries)))
-
-(defun packed-filename (file)
-  "Return the filename (aka basename) of FILE."
-  (file-name-nondirectory (directory-file-name file)))
 
 ;;; Load Path
 

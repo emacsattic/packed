@@ -183,7 +183,7 @@ FILE should be an Emacs lisp source file."
              (with-syntax-table emacs-lisp-mode-syntax-table
                ,@body)))))))
 
-(defun packed-library-p (file &optional package)
+(defun packed-library-p (file)
   "Return non-nil if FILE is an Emacs source library and part of PACKAGE.
 Actually return the feature provided by FILE.
 
@@ -195,13 +195,10 @@ the correct feature; that is a feature that matches its filename
            (and (string-match (packed-el-regexp) filename)
                 (not (or (file-symlink-p file)
                          (string-equal filename dir-locals-file)
-                         (auto-save-file-name-p filename)
-                         (if package
-                             (string-equal filename (concat package "-pkg.el"))
-                           (string-match "-pkg\\.el$" filename)))))))
+                         (auto-save-file-name-p filename))))))
        (packed-library-feature file)))
 
-(defun packed-libraries (directory &optional package full nonrecursive)
+(defun packed-libraries (directory &optional full nonrecursive)
   "Return a list of libraries that are part of PACKAGE located in DIRECTORY.
 DIRECTORY is assumed to contain the libraries belonging to a
 single package.
@@ -216,14 +213,10 @@ in DIRECTORY."
                 (if full
                     library
                   (file-relative-name library directory))))
-         (packed-libraries-1 directory
-                             (or package (packed-filename directory))
-                             nonrecursive)))
+         (packed-libraries-1 directory nonrecursive)))
 
-(defun packed-libraries-1 (directory &optional package nonrecursive)
-  "Return a list of Emacs lisp files in the package directory DIRECTORY.
-DIRECTORY is assumed to contain the libraries belonging to a
-single package named PACKAGE.
+(defun packed-libraries-1 (directory &optional nonrecursive)
+  "Return a list of Emacs lisp files DIRECTORY and its subdirectories.
 
 The return value has the form ((LIBRARY . FEATURE)...).  FEATURE
 is nil if LIBRARY does not provide a feature or only features
@@ -233,11 +226,10 @@ that don't match the filename."
       (cond ((file-directory-p f)
              (or nonrecursive
                  (packed-ignore-directory-p f)
-                 (setq libraries (nconc (packed-libraries-1 f package)
-                                        libraries))))
+                 (setq libraries (nconc (packed-libraries-1 f) libraries))))
             ((string-match (packed-el-regexp)
                            (file-name-nondirectory f))
-             (push (cons f (packed-library-p f package)) libraries))))
+             (push (cons f (packed-library-p f)) libraries))))
     (nreverse libraries)))
 
 (defun packed-main-library (directory &optional package noerror nosingle)
@@ -260,7 +252,7 @@ name.
 If the main library cannot be found raise an error or if optional
 NOERROR is non-nil return nil."
   (packed-main-library-1 (or package (packed-filename directory))
-                         (packed-libraries-1 directory package)
+                         (packed-libraries-1 directory)
                          noerror nosingle))
 
 (defun packed-main-library-1 (package libraries &optional noerror nosingle)
@@ -313,9 +305,9 @@ non-nil return nil."
 
 ;;; Load Path
 
-(defun packed-add-to-load-path (directory &optional package)
+(defun packed-add-to-load-path (directory)
   "Add DIRECTORY and subdirectories to `load-path' if they contain libraries."
-  (--each (packed-load-path directory package)
+  (--each (packed-load-path directory)
     (add-to-list 'load-path it)))
 
 (defun packed-remove-from-load-path (directory)
@@ -327,18 +319,18 @@ Elements of `load-path' which no longer exist are not removed."
     (when (file-directory-p it)
       (packed-remove-from-load-path it))))
 
-(defun packed-load-path (directory &optional package)
+(defun packed-load-path (directory)
   "Return a list of directories below DIRECTORY that contain libraries."
   (let (lp in-lp)
     (dolist (f (directory-files directory t "^[^.]"))
       (cond ((file-regular-p f)
              (and (not in-lp)
-                  (packed-library-p f (or package (packed-filename directory)))
+                  (packed-library-p f)
                   (add-to-list 'lp (directory-file-name directory))
                   (setq in-lp t)))
             ((file-directory-p f)
              (unless (packed-ignore-directory-p f)
-               (setq lp (nconc (packed-load-path f package) lp))))))
+               (setq lp (nconc (packed-load-path f) lp))))))
     lp))
 
 ;;; Byte Compile
@@ -354,7 +346,7 @@ Elements of `load-path' which no longer exist are not removed."
   "Like `byte-compile-file' but don't run any mode hooks."
   (packed-without-mode-hooks (byte-compile-file filename load)))
 
-(defun packed-compile-package (directory &optional package force)
+(defun packed-compile-package (directory &optional force)
   (unless noninteractive
     (save-some-buffers)
     (force-mode-line-update))
@@ -369,7 +361,7 @@ Elements of `load-path' which no longer exist are not removed."
           (dir-count 0)
           file dir last-dir)
       (displaying-byte-compile-warnings
-       (dolist (elt (packed-libraries-1 directory package))
+       (dolist (elt (packed-libraries-1 directory))
          (setq file (car elt)
                dir (file-name-nondirectory file))
          (if (cdr elt)

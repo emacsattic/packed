@@ -158,8 +158,8 @@ if it is a hidden directory.
 Normally DIRECTORY should be an absolute path; if it is not then
 this function does not check for \".nosearch\"s existence.  This
 distinction is useful when the directory does not actually exist."
-  (or (string-match "^\\."
-                    (file-name-nondirectory (directory-file-name directory)))
+  (or (string-prefix-p "." (file-name-nondirectory
+                            (directory-file-name directory)))
       (and (file-name-absolute-p directory)
            (file-exists-p (expand-file-name ".nosearch" directory)))))
 

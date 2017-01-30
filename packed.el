@@ -153,15 +153,10 @@ and the file name is displayed in the echo area."
   "Return t if DIRECTORY is being ignored when searching for libraries.
 DIRECTORY and all libraries it and its subdirectories contain
 are being ignored if it contains a file named \".nosearch\" or
-if it is a hidden directory.
-
-Normally DIRECTORY should be an absolute path; if it is not then
-this function does not check for \".nosearch\"s existence.  This
-distinction is useful when the directory does not actually exist."
+if it is a hidden directory."
   (or (string-prefix-p "." (file-name-nondirectory
                             (directory-file-name directory)))
-      (and (file-name-absolute-p directory)
-           (file-exists-p (expand-file-name ".nosearch" directory)))))
+      (file-exists-p (expand-file-name ".nosearch" directory))))
 
 (defmacro packed-with-file (file &rest body)
   "Execute BODY in a buffer containing the contents of FILE.

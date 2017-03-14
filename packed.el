@@ -180,7 +180,7 @@ FILE should be an Emacs lisp source file."
                ,@body)))))))
 
 (defun packed-library-p (file)
-  "Return non-nil if FILE is an Emacs source library and part of PACKAGE.
+  "Return non-nil if FILE is an Emacs source library.
 Actually return the feature provided by FILE.
 
 An Emacs lisp file is considered to be a library if it provides

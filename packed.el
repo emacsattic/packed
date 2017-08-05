@@ -3,7 +3,7 @@
 ;; Copyright (C) 2012-2017  Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
-;; Homepage: https://github.com/tarsius/packed
+;; Homepage: https://github.com/emacscollective/packed
 ;; Keywords: compile, convenience, lisp, package, library
 ;; Package-Requires: ((emacs "24.3") (dash "2.12.1"))
 

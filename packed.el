@@ -1,6 +1,6 @@
 ;;; packed.el --- package manager agnostic Emacs Lisp package utilities
 
-;; Copyright (C) 2012-2017  Jonas Bernoulli
+;; Copyright (C) 2012-2018  Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Homepage: https://github.com/emacscollective/packed
@@ -46,18 +46,6 @@
 (declare-function autoload-file-load-name "autoload")
 (declare-function info-initialize "info")
 (defvar Info-directory-list)
-
-;;; Options
-
-(defgroup packed nil
-  "Emacs package utilities."
-  :group 'convenience
-  :prefix 'packed)
-
-(defcustom packed-loaddefs-filename "loaddefs.el"
-  "Name of the files used to store extracted autoload definitions."
-  :group 'packed
-  :type 'file)
 
 ;;; Libraries
 
@@ -376,10 +364,30 @@ Elements of `load-path' which no longer exist are not removed."
 
 ;;; Autoloads
 
-(defun packed-loaddefs-file (&optional directory)
-  (let ((file (locate-dominating-file (or directory default-directory)
-                                      packed-loaddefs-filename)))
-    (and file (expand-file-name packed-loaddefs-filename file))))
+(defun packed-loaddefs-file (&optional file)
+  "Starting at FILE, look up directory hierarchy for an autoloads file.
+
+An autoloads file is either named \"loaddefs.el\" or its name ends
+with \"-autoloads.el\".  FILE can be a file or a directory.  If
+it's a file, its directory will serve as the starting point for
+searching the hierarchy of directories.  Stop at the first parent
+directory containing such a file, and return the file.  Return
+nil if not found."
+  (unless file
+    (setq file default-directory))
+  (setq file (abbreviate-file-name (expand-file-name file)))
+  (let (found)
+    (while (not (or found
+                    (null file)
+                    (string-match locate-dominating-stop-dir-regexp file)))
+      (unless (setq found
+                    (car (directory-files
+                          file t "\\(\\`loaddefs\\.el\\|-autoloads.el\\)\\'")))
+        (when (equal file
+                     (setq file
+                           (file-name-directory (directory-file-name file))))
+          (setq file nil))))
+    found))
 
 (defun packed-load-loaddefs (&optional directory)
   (let ((file (packed-loaddefs-file directory)))

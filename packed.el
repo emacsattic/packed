@@ -1,4 +1,4 @@
-;;; packed.el --- package manager agnostic Emacs Lisp package utilities
+;;; packed.el --- package manager agnostic Emacs Lisp package utilities  -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2012-2018  Jonas Bernoulli
 
@@ -41,6 +41,7 @@
 (require 'bytecomp)
 (require 'cl-lib)
 
+(defvar autoload-modified-buffers)
 (declare-function autoload-rubric "autoload")
 (declare-function autoload-find-destination "autoload")
 (declare-function autoload-file-load-name "autoload")
@@ -307,7 +308,7 @@ Elements of `load-path' which no longer exist are not removed."
       (cond ((file-regular-p f)
              (and (not in-lp)
                   (packed-library-p f)
-                  (add-to-list 'lp (directory-file-name directory))
+                  (push (directory-file-name directory) lp)
                   (setq in-lp t)))
             ((file-directory-p f)
              (unless (packed-ignore-directory-p f)
@@ -441,7 +442,7 @@ nil if not found."
           (dolist (feature (cons (match-string 1)
                                  (let ((f (match-string 2)))
                                    (and f (split-string f " " t)))))
-            (add-to-list 'features (intern feature))))))
+            (push (intern feature) features)))))
     (or features
         (and (goto-char (point-min))
              (re-search-forward
@@ -495,9 +496,9 @@ library.  If a file lacks an expected feature then loading it using
                    (or (nth 3 (syntax-ppss))    ; in string
                        (nth 4 (syntax-ppss))))) ; in comment
                 ((match-string 2)
-                 (add-to-list 'soft feature))
+                 (push feature soft))
                 (t
-                 (add-to-list 'hard feature))))))
+                 (push feature hard))))))
     (list hard soft)))
 
 ;;; Info Pages

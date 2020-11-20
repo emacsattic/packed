@@ -322,9 +322,9 @@ Elements of `load-path' which no longer exist are not removed."
          emacs-lisp-mode-hook)
      ,@body))
 
-(defun packed-byte-compile-file (filename &optional load)
+(defun packed-byte-compile-file (filename)
   "Like `byte-compile-file' but don't run any mode hooks."
-  (packed-without-mode-hooks (byte-compile-file filename load)))
+  (packed-without-mode-hooks (byte-compile-file filename)))
 
 (defun packed-compile-package (directory &optional force)
   (unless noninteractive

@@ -139,11 +139,14 @@ and the file name is displayed in the echo area."
 
 (defun packed-ignore-directory-p (directory)
   "Return t if DIRECTORY is being ignored when searching for libraries.
-DIRECTORY and all libraries it and its subdirectories contain
-are being ignored if it contains a file named \".nosearch\" or
-if it is a hidden directory."
+DIRECTORY and all libraries it and its subdirectories contain are being
+ignored if it contains a file named \".nosearch\" or if it's used for
+test or if it is a hidden directory."
   (or (string-prefix-p "." (file-name-nondirectory
                             (directory-file-name directory)))
+      (string-match-p "\\b\\(test\\|TEST\\)[sS]?\\b"
+                      (file-name-nondirectory
+                       (directory-file-name directory)))
       (file-exists-p (expand-file-name ".nosearch" directory))))
 
 (defmacro packed-with-file (file &rest body)

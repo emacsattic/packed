@@ -1,5 +1,4 @@
-Package manager agnostic Emacs Lisp package utilities
-=====================================================
+** Package manager agnostic Emacs Lisp package utilities
 
 Packed provides some package manager agnostic utilities to work
 with Emacs Lisp packages.  As far as Packed is concerned packages

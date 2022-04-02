@@ -102,7 +102,7 @@ but not source files and always expects the \".elc\" suffix."
         (setq file nil)))
     (or file standard)))
 
-(defalias 'packed-elc-file 'byte-compile-dest-file)
+(defalias 'packed-elc-file #'byte-compile-dest-file)
 
 (defun packed-locate-library (library &optional nosuffix path interactive-call)
   "Show the precise file name of Emacs library LIBRARY.
@@ -125,7 +125,7 @@ string.  When run interactively, the argument INTERACTIVE-CALL is t,
 and the file name is displayed in the echo area."
   (interactive (list (completing-read "Locate library: "
                                       (apply-partially
-                                       'locate-file-completion-table
+                                       #'locate-file-completion-table
                                        load-path (get-load-suffixes)))
                      nil nil t))
   (let ((file (locate-file (substitute-in-file-name library)

@@ -263,7 +263,7 @@ non-nil return nil."
                 (car libraries))
                ((packed-main-library-2 package libraries))
                ((packed-main-library-2
-                 (if (string-match "-mode$" package)
+                 (if (string-suffix-p "-mode" package)
                      (substring package 0 -5)
                    (concat package "-mode"))
                  libraries)))))

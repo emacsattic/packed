@@ -399,7 +399,8 @@ nil if not found."
 (defmacro packed-with-loaddefs (dest &rest body)
   (declare (indent 1))
   `(packed-without-mode-hooks
-     (require 'autoload)
+     (with-suppressed-warnings ((obsolete autoload))
+       (require 'autoload))
      (let ((generated-autoload-file ,dest) buf)
        (prog1 (progn ,@body)
          (while (setq buf (find-buffer-visiting generated-autoload-file))

@@ -1,4 +1,4 @@
-;;; packed.el --- Package manager agnostic Emacs Lisp package utilities  -*- lexical-binding:t -*-
+;;; packed.el --- [DEPRECATED] Package manager agnostic Emacs Lisp package utilities  -*- lexical-binding:t -*-
 
 ;; Copyright (C) 2012-2022 Jonas Bernoulli
 
@@ -24,6 +24,11 @@
 ;; along with this file.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
+
+;; [DEPRECATED] This library has been deprecated.
+;;     Only a subset of the functionality provided by this library
+;;     turned out to be useful.  Those parts have been moved to the
+;;     `elx' package.
 
 ;; Packed provides some package manager agnostic utilities to work
 ;; with Emacs Lisp packages.  As far as Packed is concerned packages
